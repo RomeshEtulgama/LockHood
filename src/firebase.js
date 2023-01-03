@@ -47,6 +47,19 @@ async function addData(collection_ref, payload) {
     return await getDoc(newDocRef);
 }
 
+async function removeDoc(collection_ref, doc_id) {
+    const statsRef = doc(collection_ref, "--stats--");
+
+    const batch = writeBatch(db);
+
+    const docRef = doc(collection_ref, doc_id)
+    batch.delete(docRef);
+
+    batch.set(statsRef, { count: decrementByOne }, { merge: true });
+
+    await batch.commit()
+}
+
 //functions/users ---------------------------------------------------------------------------------------------------!
 
 /* This function adds a user to the database with the given userId, email, and displayName. The user is initially not approved. */
@@ -166,6 +179,10 @@ async function getItems() {
     return items
 }
 
+async function deleteRawItem(itemId) {
+    await removeDoc(rawItemsCollection, itemId)
+}
+
 export {
     db,
     auth,
@@ -173,6 +190,7 @@ export {
     incrementByOne,
     decrementByOne,
     addData,
+    removeDoc,
     addUser,
     getUser,
     userExists,
@@ -182,5 +200,6 @@ export {
     disapproveUser,
     changeUserClass,
     addItem,
-    getItems
+    getItems,
+    deleteRawItem
 }

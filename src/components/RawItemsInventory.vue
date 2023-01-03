@@ -57,11 +57,20 @@
         <v-data-table :headers="headers" :items="items" :items-per-page="5" :search="search" class="elevation-1" dense>
             <!-- Actions -->
             <template v-slot:[`item.actions`]="{ item }">
-                <v-btn class="error" x-small @click="deleteItem(item)">
-                    Delete
-                </v-btn>
+                <v-btn class="error" x-small @click="showConfirmation(item)">Delete</v-btn>
             </template>
         </v-data-table>
+        <v-dialog v-model="confirmationDialog" max-width="290">
+            <v-card>
+                <v-card-title class="headline">Confirm Deletion</v-card-title>
+                <v-card-text>Are you sure you want to delete this item?</v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="green darken-1" text @click="deleteItem(deletingItem)">Delete</v-btn>
+                    <v-btn text @click="confirmationDialog = false">Cancel</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-card>
 </template>
 
@@ -82,6 +91,9 @@ export default {
             item_info: { itemName: "", quantity: "" },
             dialog: false,
             valid: true,
+
+            confirmationDialog: false,
+            deletingItem: null
         }
     },
 
@@ -100,8 +112,16 @@ export default {
             this.close()
         },
 
+        showConfirmation(item) {
+            this.deletingItem = item
+            this.confirmationDialog = true
+        },
+
         async deleteItem(item) {
-            console.log(item.id)
+            fb.deleteRawItem(item.id)
+            await this.refreshItems()
+            this.confirmationDialog = false
+            this.deletingItem = null
         }
     },
 
