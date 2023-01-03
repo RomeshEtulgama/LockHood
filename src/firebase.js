@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, increment, writeBatch, doc, getDoc } from "firebase/firestore";
-import { getDatabase, ref, set, get, orderByChild, equalTo, query } from "firebase/database";
+import { getDatabase, ref, set, get, orderByChild, equalTo, query, update } from "firebase/database";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDIaLpoxskuwPQGEQf9gQ6LMvZjyySk4Ng",
@@ -25,6 +25,7 @@ const incrementByOne = increment(1)
 const decrementByOne = increment(-1)
 
 //functions
+/* Adds data to a given collection reference in a database, and increments the index and count fields of the "stats" document within the collection. It returns the newly added document. The function uses the async/await syntax to handle asynchronous actions, such as getting and setting documents with the Firestore database and committing a batch write.*/
 async function addData(collection_ref, payload) {
     const statsRef = doc(collection_ref, "--stats--");
 
@@ -43,7 +44,8 @@ async function addData(collection_ref, payload) {
     return await getDoc(newDocRef);
 }
 
-// Users
+//functions/users
+/* This function adds a user to the database with the given userId, email, and displayName. The user is initially not approved. */
 async function addUser(userId, email, displayName = null) {
     set(ref(rtd, 'users/' + userId), {
         email: email,
@@ -52,13 +54,14 @@ async function addUser(userId, email, displayName = null) {
     });
 }
 
+/* Checks if a user with the given email exists in the database by querying the 'users' collection and ordering by the 'email' field. It returns a boolean indicating whether or not the user exists. */
 async function userExists(email) {
     const q = query(ref(rtd, 'users'), orderByChild("email"), equalTo(email));
     return (await get(q).then((snapshot) => {
         return snapshot.exists()
     }))
 }
-
+/* Retrieves the current user and then checks if they are approved and assigns their class based on their email.*/
 async function getUser() {
     const user = await getAuth().currentUser
 
@@ -70,6 +73,7 @@ async function getUser() {
     return user;
 }
 
+/* checks if a user with the given email is approved. It creates a query to search for a user with the matching email in the 'users' collection and then checks the 'approved' field for a true value. It returns a boolean indicating whether the user is approved or not.*/
 async function userApproved(email) {
     var approved = false
     if (email) {
@@ -83,6 +87,7 @@ async function userApproved(email) {
     return approved;
 }
 
+/* retrieves the class of a user with the given email. It creates a query to search for a user with the matching email in the 'users' collection and then retrieves the 'class' field for that user. It returns the user's class or null if no user with the given email was found. */
 async function userClass(email) {
     var user_class = null
     if (email) {
@@ -96,6 +101,7 @@ async function userClass(email) {
     return user_class;
 }
 
+/* retrieves a list of all users from the 'users' collection in the database. It creates a query to retrieve all documents in the 'users' collection and then iterates through the snapshot of returned documents, creating a user object for each document and adding it to the users array. It returns the array of user objects. */
 async function getUsers() {
     var users = []
     const q = query(ref(rtd, 'users'));
@@ -109,15 +115,29 @@ async function getUsers() {
     return users;
 }
 
+/* approves a user with the given userId by updating the 'approved' field in the user's document in the 'users' collection to true. It creates a reference to the user's document and uses the update() function to set the 'approved' field to true. */
 async function approveUser(userId) {
-    const userRef = ref(rtd, 'users').doc(userId);
-    await userRef.update({ approved: true });
+    const userRef = ref(rtd, 'users/' + userId)
+    update(userRef, {
+        approved: true
+    })
 }
 
+/* disapproves a user with the given userId by updating the 'approved' field in the user's document in the 'users' collection to false. It creates a reference to the user's document and uses the update() function to set the 'approved' field to false. */
 async function disapproveUser(userId) {
-    console.log(userId)
+    const userRef = ref(rtd, 'users/' + userId)
+    update(userRef, {
+        approved: false
+    })
 }
 
+/* changes the class of a user with the given userId by updating the 'class' field in the user's document in the 'users' collection to the specified user_class. It creates a reference to the user's document and uses the update() function to set the 'class' field to the specified user_class. */
+async function changeUserClass(userId, user_class) {
+    const userRef = ref(rtd, 'users/' + userId)
+    update(userRef, {
+        class: user_class
+    })
+}
 
 export {
     db,
@@ -133,4 +153,5 @@ export {
     getUsers,
     approveUser,
     disapproveUser,
+    changeUserClass
 }
