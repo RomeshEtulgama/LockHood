@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <v-card-title>
-            Employee Management
+            Factory Items
             <v-spacer></v-spacer>
             <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
                 hide-details></v-text-field>
@@ -26,10 +26,8 @@ export default {
     data() {
         return {
             headers: [
-                { text: 'Display Name', value: 'displayName' },
-                { text: 'Email', value: 'email' },
-                { text: 'Class', value: 'class' },
-                { text: 'Approved', value: 'approved' },
+                { text: 'Item Name', value: 'itemName' },
+                { text: 'Quantity', value: 'quantity' },
             ],
             users: [],
             userClasses: ['Admin', 'Employee', 'HR', 'Supervisor'],

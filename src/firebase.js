@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, increment, writeBatch, doc, getDoc } from "firebase/firestore";
+import { getFirestore, increment, writeBatch, doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { getDatabase, ref, set, get, orderByChild, equalTo, query, update } from "firebase/database";
 
 const firebaseConfig = {
@@ -24,6 +24,9 @@ const rtd = getDatabase(app)
 const incrementByOne = increment(1)
 const decrementByOne = increment(-1)
 
+// collection refs
+const rawItemsCollection = collection(db, 'rawItems')
+
 //functions
 /* Adds data to a given collection reference in a database, and increments the index and count fields of the "stats" document within the collection. It returns the newly added document. The function uses the async/await syntax to handle asynchronous actions, such as getting and setting documents with the Firestore database and committing a batch write.*/
 async function addData(collection_ref, payload) {
@@ -44,7 +47,8 @@ async function addData(collection_ref, payload) {
     return await getDoc(newDocRef);
 }
 
-//functions/users
+//functions/users ---------------------------------------------------------------------------------------------------!
+
 /* This function adds a user to the database with the given userId, email, and displayName. The user is initially not approved. */
 async function addUser(userId, email, displayName = null) {
     set(ref(rtd, 'users/' + userId), {
@@ -139,6 +143,29 @@ async function changeUserClass(userId, user_class) {
     })
 }
 
+//functions/rawItems ---------------------------------------------------------------------------------------------------!
+
+async function addItem(itemName, quantity) {
+    await this.addData(rawItemsCollection, {
+        itemName: itemName,
+        quantity: quantity
+    })
+}
+
+async function getItems() {
+    var items = []
+    const querySnapshot = await getDocs(rawItemsCollection);
+    querySnapshot.forEach((doc) => {
+        var item = doc.data()
+        if (item.itemName && item.quantity) {
+            item.id = doc.id
+            items.push(item)
+        }
+    });
+
+    return items
+}
+
 export {
     db,
     auth,
@@ -153,5 +180,7 @@ export {
     getUsers,
     approveUser,
     disapproveUser,
-    changeUserClass
+    changeUserClass,
+    addItem,
+    getItems
 }

@@ -96,6 +96,7 @@ export default {
 
     items: [
       { title: "Dashboard", icon: "mdi-view-dashboard", route: "/" },
+      { title: "Inventory", icon: "mdi-view-list", route: "/inventory" },
     ],
   }),
 
