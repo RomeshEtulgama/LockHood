@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, increment, writeBatch, doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { getFirestore, increment, writeBatch, doc, getDoc, collection, getDocs, updateDoc } from "firebase/firestore";
 import { getDatabase, ref, set, get, orderByChild, equalTo, query, update } from "firebase/database";
 
 const firebaseConfig = {
@@ -26,6 +26,8 @@ const decrementByOne = increment(-1)
 
 // collection refs
 const rawItemsCollection = collection(db, 'rawItems')
+const factoryItemsCollection = collection(db, 'factoryItems')
+const ordersCollection = collection(db, 'orders')
 
 //functions
 /* Adds data to a given collection reference in a database, and increments the index and count fields of the "stats" document within the collection. It returns the newly added document. The function uses the async/await syntax to handle asynchronous actions, such as getting and setting documents with the Firestore database and committing a batch write.*/
@@ -81,7 +83,7 @@ async function userExists(email) {
 }
 /* Retrieves the current user and then checks if they are approved and assigns their class based on their email.*/
 async function getUser() {
-    const user = await getAuth().currentUser
+    const user = getAuth().currentUser
 
     if (user) {
         user.approved = await userApproved(user.email)
@@ -160,7 +162,7 @@ async function changeUserClass(userId, user_class) {
 //functions/rawItems ---------------------------------------------------------------------------------------------------!
 
 /* adds an item to the "rawItems" collection in a database with the specified name and quantity. */
-async function addItem(itemName, quantity) {
+async function addRawItem(itemName, quantity) {
     await this.addData(rawItemsCollection, {
         itemName: itemName,
         quantity: quantity
@@ -168,7 +170,7 @@ async function addItem(itemName, quantity) {
 }
 
 /* retrieves all documents from the "rawItems" collection in a database and returns them as an array of objects. Each object in the array contains the fields "itemName" and "quantity" from the corresponding document in the collection, as well as an additional field "id" which is the document ID. */
-async function getItems() {
+async function getRawItems() {
     var items = []
     const querySnapshot = await getDocs(rawItemsCollection);
     querySnapshot.forEach((doc) => {
@@ -187,6 +189,112 @@ async function deleteRawItem(itemId) {
     await removeDoc(rawItemsCollection, itemId)
 }
 
+/* updates the "quantity" field of a document with the specified ID in the "rawItems" collection in a database. */
+async function updateRawItemQuantity(itemId, quantity) {
+    const docRef = doc(rawItemsCollection, itemId)
+
+    await updateDoc(docRef, {
+        quantity: quantity
+    });
+}
+
+//functions/factoryItems ---------------------------------------------------------------------------------------------------!
+
+/* adds an item to the "factoryItems" collection in a database with the specified name and quantity. */
+async function addFactoryItem(itemName, quantity) {
+    await this.addData(factoryItemsCollection, {
+        itemName: itemName,
+        quantity: quantity
+    })
+}
+
+/* retrieves all documents from the "factoryItems" collection in a database and returns them as an array of objects. Each object in the array contains the fields "itemName" and "quantity" from the corresponding document in the collection, as well as an additional field "id" which is the document ID. */
+async function getFactoryItems() {
+    var items = []
+    const querySnapshot = await getDocs(factoryItemsCollection);
+    querySnapshot.forEach((doc) => {
+        var item = doc.data()
+        if (item.itemName && item.quantity) {
+            item.id = doc.id
+            items.push(item)
+        }
+    });
+
+    return items
+}
+
+/* removes a document with the specified ID from the "factoryItems" collection in a database. */
+async function deleteFactoryItem(itemId) {
+    await removeDoc(factoryItemsCollection, itemId)
+}
+
+/* updates the "quantity" field of a document with the specified ID in the "factoryItems" collection in a database.*/
+async function updateFactoryItemQuantity(itemId, quantity) {
+    const docRef = doc(factoryItemsCollection, itemId)
+
+    await updateDoc(docRef, {
+        quantity: quantity
+    });
+}
+
+//functions/orders ---------------------------------------------------------------------------------------------------!
+/* retrieves all documents from the "orders" collection in a database and returns them as an array of objects. Each object in the array contains the field "customer" from the corresponding document in the collection, as well as an additional field "id" which is the document ID. If the document contains a field "customLockType", it is added to the object as a field "lockType". */
+async function getOrders() {
+    var orders = []
+    const querySnapshot = await getDocs(ordersCollection);
+    querySnapshot.forEach((doc) => {
+        var order = doc.data()
+        if (order.customer) {
+            order.id = doc.id
+            if (order.customLockType) {
+                order.lockType = order.customLockType
+            }
+            orders.push(order)
+        }
+    });
+
+    return orders
+}
+
+/* retrieves all documents from the "orders" collection in a database and returns an array of unique lock types that have been specified in the "customLockType" field of these documents. The array also includes the string "Custom" as the last element. */
+async function getLockTypes() {
+    var lockTypes = []
+    const querySnapshot = await getDocs(ordersCollection);
+    querySnapshot.forEach((doc) => {
+        var order = doc.data()
+        if (order.customLockType) {
+            lockTypes.push(order.customLockType)
+        }
+    });
+    lockTypes.push("Custom")
+    return lockTypes
+}
+
+/* adds an order to the "orders" collection in a database with the specified customer, lock type, custom lock type, description, and quantity. If the lock type is "Custom", the custom lock type field is required. */
+async function addOrder(customer, lockType, customLockType, description, quantity) {
+    await this.addData(ordersCollection, {
+        customer: customer,
+        lockType: lockType,
+        customLockType: customLockType,
+        description: description,
+        quantity: quantity
+    })
+}
+
+/*  removes a document with the specified ID from the "orders" collection in a database. */
+async function deleteOrder(itemId) {
+    await removeDoc(ordersCollection, itemId)
+}
+
+/* updates the "quantity" field of a document with the specified ID in the "orders" collection in a database. */
+async function updateOrderQuantity(itemId, quantity) {
+    const docRef = doc(ordersCollection, itemId)
+
+    await updateDoc(docRef, {
+        quantity: quantity
+    });
+}
+
 export {
     db,
     auth,
@@ -203,7 +311,17 @@ export {
     approveUser,
     disapproveUser,
     changeUserClass,
-    addItem,
-    getItems,
-    deleteRawItem
+    addRawItem,
+    getRawItems,
+    deleteRawItem,
+    updateRawItemQuantity,
+    addFactoryItem,
+    getFactoryItems,
+    deleteFactoryItem,
+    updateFactoryItemQuantity,
+    getOrders,
+    addOrder,
+    deleteOrder,
+    updateOrderQuantity,
+    getLockTypes
 }

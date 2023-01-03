@@ -22,7 +22,29 @@ const routes = [
     component: async () => {
       const user = await fb.getUser();
       if (user.class)
-        return import('../views/' + user.class + '/Inventory.vue')
+        return import('../views/Inventory.vue')
+      else
+        return import('../views/Error.vue')
+    }
+  },
+  {
+    path: '/orders',
+    name: 'Orders',
+    component: async () => {
+      const user = await fb.getUser();
+      if (user.class)
+        return import('../views/Orders.vue')
+      else
+        return import('../views/Error.vue')
+    }
+  },
+  {
+    path: '/kanban',
+    name: 'Kanban',
+    component: async () => {
+      const user = await fb.getUser();
+      if (user.class)
+        return import('../views/KanBan.vue')
       else
         return import('../views/Error.vue')
     }

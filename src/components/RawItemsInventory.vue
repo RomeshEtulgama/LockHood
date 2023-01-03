@@ -54,7 +54,12 @@
                 <v-icon>mdi-refresh</v-icon>
             </v-btn>
         </v-card-title>
-        <v-data-table :headers="headers" :items="items" :items-per-page="5" :search="search" class="elevation-1" dense>
+        <v-data-table :headers="headers" :items="items" :items-per-page="10" :search="search" class="elevation-1" dense>
+            <!-- Quantity -->
+            <template v-slot:[`item.quantity`]="{ item }">
+                <v-text-field type="number" class="w-100" v-model="item.quantity" dense hide-details solo
+                    @change="updateQuantity(item)"></v-text-field>
+            </template>
             <!-- Actions -->
             <template v-slot:[`item.actions`]="{ item }">
                 <v-btn class="error" x-small @click="showConfirmation(item)">Delete</v-btn>
@@ -99,7 +104,7 @@ export default {
 
     methods: {
         async refreshItems() {
-            this.items = await fb.getItems()
+            this.items = await fb.getRawItems()
         },
 
         close() {
@@ -107,7 +112,7 @@ export default {
         },
 
         async save() {
-            await fb.addItem(this.item_info.itemName, Number(this.item_info.quantity))
+            await fb.addRawItem(this.item_info.itemName, Number(this.item_info.quantity))
             await this.refreshItems()
             this.close()
         },
@@ -122,6 +127,10 @@ export default {
             await this.refreshItems()
             this.confirmationDialog = false
             this.deletingItem = null
+        },
+
+        async updateQuantity(item) {
+            fb.updateRawItemQuantity(item.id, item.quantity)
         }
     },
 
@@ -132,5 +141,7 @@ export default {
 </script>
 
 <style>
-
+.w-100 {
+    width: 100px;
+}
 </style>

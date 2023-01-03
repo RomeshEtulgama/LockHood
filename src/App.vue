@@ -97,6 +97,8 @@ export default {
     items: [
       { title: "Dashboard", icon: "mdi-view-dashboard", route: "/" },
       { title: "Inventory", icon: "mdi-view-list", route: "/inventory" },
+      { title: "Orders", icon: "mdi-book", route: "/orders" },
+      { title: "KanBan", icon: "mdi-card", route: "/kanban" },
     ],
   }),
 
