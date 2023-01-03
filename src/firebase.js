@@ -47,6 +47,7 @@ async function addData(collection_ref, payload) {
     return await getDoc(newDocRef);
 }
 
+/* removes a document from a specified collection in a database and updates the "--stats--" document in the same collection by decrementing the "count" field by 1. The function utilizes a write batch to atomically perform both actions in a single transaction. */
 async function removeDoc(collection_ref, doc_id) {
     const statsRef = doc(collection_ref, "--stats--");
 
@@ -158,6 +159,7 @@ async function changeUserClass(userId, user_class) {
 
 //functions/rawItems ---------------------------------------------------------------------------------------------------!
 
+/* adds an item to the "rawItems" collection in a database with the specified name and quantity. */
 async function addItem(itemName, quantity) {
     await this.addData(rawItemsCollection, {
         itemName: itemName,
@@ -165,6 +167,7 @@ async function addItem(itemName, quantity) {
     })
 }
 
+/* retrieves all documents from the "rawItems" collection in a database and returns them as an array of objects. Each object in the array contains the fields "itemName" and "quantity" from the corresponding document in the collection, as well as an additional field "id" which is the document ID. */
 async function getItems() {
     var items = []
     const querySnapshot = await getDocs(rawItemsCollection);
@@ -179,6 +182,7 @@ async function getItems() {
     return items
 }
 
+/* removes a document with the specified ID from the "rawItems" collection in a database. */
 async function deleteRawItem(itemId) {
     await removeDoc(rawItemsCollection, itemId)
 }
