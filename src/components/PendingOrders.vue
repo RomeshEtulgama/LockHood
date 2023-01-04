@@ -22,9 +22,9 @@
 
         <v-dialog v-model="orderAcceptanceDialog" max-width="600">
             <v-card>
-                <v-card-title class="headline">Accept Order - {{ acceptingOrder ? acceptingOrder.lockType :
-        ""
-}}</v-card-title>
+                <v-card-title class="headline">Accept Order - {{
+                    acceptingOrder? acceptingOrder.lockType
+                : ""}}</v-card-title>
                 <v-card-text>
                     <v-row v-if="acceptingOrder">
                         <v-col>

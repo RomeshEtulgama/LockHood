@@ -29,7 +29,7 @@
                                             :rules="[() => !!item_info.itemName || 'Item Name is required']"
                                             required></v-text-field>
                                     </v-col>
-                                    <!-- Address -->
+                                    <!-- Quantity -->
                                     <v-col cols="12" sm="6" md="4" lg="4">
                                         <v-text-field type="number" v-model="item_info.quantity" label="Quantity"
                                             :rules="[
@@ -142,13 +142,13 @@ export default {
 
         async updateQuantity(item) {
             this.loading = true
-            fb.updateRawItemQuantity(item.id, item.quantity)
+            await fb.updateRawItemQuantity(item.id, item.quantity)
             this.loading = false
         },
 
         async updateItemName(item) {
             this.loading = true
-            fb.updateRawItemName(item.id, item.itemName)
+            await fb.updateRawItemName(item.id, item.itemName)
             this.loading = false
         }
     },

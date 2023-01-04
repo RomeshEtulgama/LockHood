@@ -198,6 +198,11 @@ async function getRawItems() {
     return items
 }
 
+async function getRawItem(itemId) {
+    const docRef = doc(rawItemsCollection, itemId)
+    return await (await getDoc(docRef)).data()
+}
+
 /* removes a document with the specified ID from the "rawItems" collection in a database. */
 async function deleteRawItem(itemId) {
     await removeDoc(rawItemsCollection, itemId)
@@ -224,26 +229,39 @@ async function updateRawItemName(itemId, itemName) {
 //functions/factoryItems ---------------------------------------------------------------------------------------------------!
 
 /* adds an item to the "factoryItems" collection in a database with the specified name and quantity. */
-async function addFactoryItem(itemName, quantity) {
-    await this.addData(factoryItemsCollection, {
-        itemName: itemName,
-        quantity: quantity
-    })
+async function addFactoryItem(item) {
+    await this.addData(factoryItemsCollection, item)
 }
 
 /* retrieves all documents from the "factoryItems" collection in a database and returns them as an array of objects. Each object in the array contains the fields "itemName" and "quantity" from the corresponding document in the collection, as well as an additional field "id" which is the document ID. */
 async function getFactoryItems() {
-    var items = []
+    var products = []
     const querySnapshot = await getDocs(factoryItemsCollection);
     querySnapshot.forEach((doc) => {
-        var item = doc.data()
-        if (item.itemName && item.quantity) {
-            item.id = doc.id
-            items.push(item)
+        var product = doc.data()
+        if (product.productName) {
+            product.id = doc.id
+            product.required_raw_items.forEach(async rawItem => {
+                var item = await this.getRawItem(rawItem.rawItem)
+                rawItem.rawItem = item.itemName
+            })
+            products.push(product)
         }
     });
 
-    return items
+    // console.log(products)
+
+    return products
+}
+
+async function getFactoryItem(itemId) {
+    const docRef = doc(factoryItemsCollection, itemId)
+    return await (await getDoc(docRef)).data()
+}
+
+async function updateFactoryItem(itemId, payload) {
+    const docRef = doc(factoryItemsCollection, itemId)
+    await updateDoc(docRef, payload)
 }
 
 /* removes a document with the specified ID from the "factoryItems" collection in a database. */
@@ -370,6 +388,7 @@ export {
     changeUserClass,
     addRawItem,
     getRawItems,
+    getRawItem,
     deleteRawItem,
     updateRawItemQuantity,
     addFactoryItem,
@@ -384,5 +403,7 @@ export {
     getPendingOrders,
     acceptOrder,
     getEmployees,
-    updateRawItemName
+    updateRawItemName,
+    getFactoryItem,
+    updateFactoryItem
 }

@@ -6,16 +6,18 @@
             <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
                 hide-details></v-text-field>
             <v-spacer></v-spacer>
-            <v-dialog v-model="dialog" max-width="400px">
+
+            <!-- Add Product -->
+            <v-dialog v-model="dialog" max-width="400px" persistent>
                 <template v-slot:activator="{ on, attrs }">
                     <!-- Add New Item -->
                     <v-btn color="success" dark v-bind="attrs" v-on="on" class="mx-2" small>
-                        Add Item
+                        Add Product
                     </v-btn>
                 </template>
                 <v-card>
                     <v-card-title>
-                        <span class="text-h5">Add Item</span>
+                        <span class="text-h5">Product</span>
                     </v-card-title>
 
                     <v-card-text>
@@ -25,15 +27,24 @@
                                 <v-row>
                                     <!-- Name -->
                                     <v-col cols="12" sm="6" md="8" lg="8">
-                                        <v-text-field v-model="item_info.itemName" label="Item Name"
-                                            :rules="[() => !!item_info.itemName || 'Item Name is required',]"
+                                        <v-text-field v-model="product_info.productName" label="Product Name"
+                                            :rules="[() => !!product_info.productName || 'Product Name is required',]"
                                             required></v-text-field>
                                     </v-col>
-                                    <!-- Address -->
-                                    <v-col cols="12" sm="6" md="4" lg="4">
-                                        <v-text-field type="number" v-model="item_info.quantity" label="Quantity"
-                                            :rules="[() => !!item_info.quantity || 'Item Quantity is required',]"
-                                            required></v-text-field>
+                                </v-row>
+                                <v-row v-for="(item, i) in product_info.required_raw_items" :key="i">
+                                    <v-col cols="12" lg="8" md="6" sm="12">
+                                        <v-select v-model="item.rawItem" :items="rawItems" item-text="itemName"
+                                            item-value="id" label="Raw Item" dense></v-select>
+                                    </v-col>
+                                    <v-col cols="12" lg="4" md="6" sm="12">
+                                        <v-text-field v-model="item.quantity" type="number" label="Quantity"
+                                            dense></v-text-field>
+                                    </v-col>
+                                </v-row>
+                                <v-row>
+                                    <v-col>
+                                        <v-btn @click="addRequiredItem()">Add Item</v-btn>
                                     </v-col>
                                 </v-row>
                             </v-form>
@@ -42,30 +53,37 @@
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-btn color="blue darken-1" text @click="close"> Cancel </v-btn>
-                        <v-btn color="blue darken-1" text @click="save"> Save </v-btn>
+                        <v-btn v-if="editExistingProduct" color="blue darken-1" text @click="updateProduct"> Edit
+                        </v-btn>
+                        <v-btn v-else color="blue darken-1" text @click="save"> Save </v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
-            <v-btn class="mx-2" icon @click="refreshItems">
+            <v-btn class="mx-2" icon @click="refreshProducts">
                 <v-icon>mdi-refresh</v-icon>
             </v-btn>
         </v-card-title>
-        <v-data-table :headers="headers" :items="items" :items-per-page="10" :search="search" class="elevation-1" dense>
-            <!-- Quantity -->
-            <template v-slot:[`item.quantity`]="{ item }">
-                <v-text-field type="number" class="w-100" v-model="item.quantity" dense hide-details solo
-                    @change="updateQuantity(item)"></v-text-field>
-            </template>
-            <!-- progress -->
-            <template v-slot:[`item.progress`]="{ item }">
-                <v-chip v-if="item.progress == 'finished'" class="success" small>Finished</v-chip>
-                <v-chip v-else class="warning" small>In progress</v-chip>
+
+        <v-data-table :headers="headers" :items="products" :items-per-page="10" :search="search" class="elevation-1"
+            dense>
+            <!-- Required Raw Item -->
+            <template v-slot:[`item.required_raw_items`]="{ item }">
+                <div v-for="(rItem, i) in item.required_raw_items" :key="i">{{
+                    rItem.rawItem + " x " + rItem.quantity
+                }}</div>
             </template>
             <!-- Actions -->
             <template v-slot:[`item.actions`]="{ item }">
-                <v-btn class="error" x-small @click="showConfirmation(item)">Delete</v-btn>
+                <v-icon small class="mr-2" @click="editProduct(item)">
+                    mdi-pencil
+                </v-icon>
+                <v-icon small @click="showConfirmation(item)">
+                    mdi-delete
+                </v-icon>
             </template>
         </v-data-table>
+
+        <!-- Delete Confirmation -->
         <v-dialog v-model="confirmationDialog" max-width="290">
             <v-card>
                 <v-card-title class="headline">Confirm Deletion</v-card-title>
@@ -88,17 +106,22 @@ export default {
         return {
             loading: true,
             headers: [
-                { text: 'Item Name', value: 'itemName' },
-                { text: 'Quantity', value: 'quantity' },
-                { text: 'Progress', value: 'progress' },
+                { text: 'Product Name', value: 'productName' },
+                { text: 'Required Raw Items', value: 'required_raw_items' },
                 { text: "Actions", value: "actions", align: "right", sortable: false },
             ],
-            items: [],
+            products: [],
+            rawItems: [],
             search: "",
 
-            item_info: { itemName: "", quantity: "" },
+            product_info: {
+                productName: "",
+                required_raw_items: [{ rawItem: "", quantity: "" }]
+            },
+
             dialog: false,
             valid: true,
+            editExistingProduct: false,
 
             confirmationDialog: false,
             deletingItem: null
@@ -106,21 +129,23 @@ export default {
     },
 
     methods: {
-        async refreshItems() {
+        async refreshProducts() {
             this.loading = true
-            this.items = await fb.getFactoryItems()
+            this.products = await fb.getFactoryItems()
+            this.rawItems = await fb.getRawItems()
             this.loading = false
         },
 
 
         close() {
             this.dialog = false
+            this.editExistingProduct = false
         },
 
         async save() {
             this.loading = true
-            await fb.addFactoryItem(this.item_info.itemName, Number(this.item_info.quantity))
-            await this.refreshItems()
+            await fb.addFactoryItem(this.product_info)
+            await this.refreshProducts()
             this.close()
             this.loading = false
         },
@@ -132,8 +157,8 @@ export default {
 
         async deleteItem(item) {
             this.loading = true
-            fb.deleteFactoryItem(item.id)
-            await this.refreshItems()
+            await fb.deleteFactoryItem(item.id)
+            await this.refreshProducts()
             this.confirmationDialog = false
             this.deletingItem = null
             this.loading = false
@@ -141,13 +166,33 @@ export default {
 
         async updateQuantity(item) {
             this.loading = true
-            fb.updateFactoryItemQuantity(item.id, item.quantity)
+            await fb.updateFactoryItemQuantity(item.id, item.quantity)
+            this.loading = false
+        },
+
+        addRequiredItem() {
+            this.product_info.required_raw_items.push({ rawItem: "", quantity: "" })
+        },
+
+        async editProduct(item) {
+            this.loading = true
+            this.product_info = await fb.getFactoryItem(item.id)
+            this.editExistingProduct = item.id;
+            this.dialog = true
+            this.loading = false
+        },
+
+        async updateProduct() {
+            this.loading = true
+            await fb.updateFactoryItem(this.editExistingProduct, this.product_info)
+            await this.refreshProducts()
+            this.close()
             this.loading = false
         }
     },
 
     async mounted() {
-        await this.refreshItems()
+        await this.refreshProducts()
     }
 }
 </script>
