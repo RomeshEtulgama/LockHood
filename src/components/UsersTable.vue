@@ -9,7 +9,13 @@
         <v-data-table :headers="headers" :items="users" :items-per-page="5" :search="search" class="elevation-1">
             <template v-slot:[`item.class`]="{ item }">
                 <v-select :items="userClasses" v-model="item.class" solo dense hide-details
-                    style="max-width: 150px !important" @change="changeUserClass(item)"></v-select>
+                    style="max-width: 150px !important" @change="changeUserClass(item)" :rules="[
+                        () =>
+                            !!item.class || 'User class is required',
+                    ]" required></v-select>
+                <v-snackbar v-model="snackbar" :timeout="timeout">
+                    Please select the user class.
+                </v-snackbar>
             </template>
             <template v-slot:[`item.approved`]="{ item }">
                 <v-btn v-if="item.approved" x-small @click="disapproveUser(item)">Disapprove</v-btn>
@@ -34,14 +40,20 @@ export default {
             ],
             users: [],
             userClasses: ['Admin', 'Employee', 'HR', 'Supervisor'],
-            search: ""
+            search: "",
+
+            snackbar: false,
+            timeout: 3000,
         }
     },
 
     methods: {
         async approveUser(user) {
             this.loading = true
-            await fb.approveUser(user.uid)
+            if (user.class)
+                await fb.approveUser(user.uid)
+            else
+                this.snackbar = true
             await this.refreshUsers()
             this.loading = false
         },

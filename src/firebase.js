@@ -340,6 +340,7 @@ async function acceptOrder(item) {
             'assigned_orders': item
         })
     })
+
 }
 
 export {
