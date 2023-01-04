@@ -25,19 +25,18 @@
                                 <v-row>
                                     <!-- Name -->
                                     <v-col cols="12" sm="6" md="8" lg="8">
-                                        <v-text-field v-model="item_info.itemName" label="Item Name" :rules="[
-    () =>
-        !!item_info.itemName || 'Item Name is required',
-]" required></v-text-field>
+                                        <v-text-field v-model="item_info.itemName" label="Item Name"
+                                            :rules="[() => !!item_info.itemName || 'Item Name is required']"
+                                            required></v-text-field>
                                     </v-col>
                                     <!-- Address -->
                                     <v-col cols="12" sm="6" md="4" lg="4">
                                         <v-text-field type="number" v-model="item_info.quantity" label="Quantity"
                                             :rules="[
-    () =>
-        !!item_info.quantity ||
-        'Item Quantity is required',
-]" required></v-text-field>
+                                                () =>
+                                                    !!item_info.quantity ||
+                                                    'Item Quantity is required',
+                                            ]" required></v-text-field>
                                     </v-col>
                                 </v-row>
                             </v-form>
@@ -55,6 +54,11 @@
             </v-btn>
         </v-card-title>
         <v-data-table :headers="headers" :items="items" :items-per-page="10" :search="search" class="elevation-1" dense>
+            <!-- Item Name -->
+            <template v-slot:[`item.itemName`]="{ item }">
+                <v-text-field v-model="item.itemName" dense hide-details solo
+                    @change="updateItemName(item)"></v-text-field>
+            </template>
             <!-- Quantity -->
             <template v-slot:[`item.quantity`]="{ item }">
                 <v-text-field type="number" class="w-100" v-model="item.quantity" dense hide-details solo
@@ -139,6 +143,12 @@ export default {
         async updateQuantity(item) {
             this.loading = true
             fb.updateRawItemQuantity(item.id, item.quantity)
+            this.loading = false
+        },
+
+        async updateItemName(item) {
+            this.loading = true
+            fb.updateRawItemName(item.id, item.itemName)
             this.loading = false
         }
     },

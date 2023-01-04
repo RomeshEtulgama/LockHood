@@ -212,6 +212,15 @@ async function updateRawItemQuantity(itemId, quantity) {
     });
 }
 
+async function updateRawItemName(itemId, itemName) {
+    const docRef = doc(rawItemsCollection, itemId)
+
+    await updateDoc(docRef, {
+        itemName: itemName
+    });
+}
+
+
 //functions/factoryItems ---------------------------------------------------------------------------------------------------!
 
 /* adds an item to the "factoryItems" collection in a database with the specified name and quantity. */
@@ -374,5 +383,6 @@ export {
     getLockTypes,
     getPendingOrders,
     acceptOrder,
-    getEmployees
+    getEmployees,
+    updateRawItemName
 }

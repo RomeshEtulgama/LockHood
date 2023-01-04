@@ -25,19 +25,15 @@
                                 <v-row>
                                     <!-- Name -->
                                     <v-col cols="12" sm="6" md="8" lg="8">
-                                        <v-text-field v-model="item_info.itemName" label="Item Name" :rules="[
-    () =>
-        !!item_info.itemName || 'Item Name is required',
-]" required></v-text-field>
+                                        <v-text-field v-model="item_info.itemName" label="Item Name"
+                                            :rules="[() => !!item_info.itemName || 'Item Name is required',]"
+                                            required></v-text-field>
                                     </v-col>
                                     <!-- Address -->
                                     <v-col cols="12" sm="6" md="4" lg="4">
                                         <v-text-field type="number" v-model="item_info.quantity" label="Quantity"
-                                            :rules="[
-    () =>
-        !!item_info.quantity ||
-        'Item Quantity is required',
-]" required></v-text-field>
+                                            :rules="[() => !!item_info.quantity || 'Item Quantity is required',]"
+                                            required></v-text-field>
                                     </v-col>
                                 </v-row>
                             </v-form>
