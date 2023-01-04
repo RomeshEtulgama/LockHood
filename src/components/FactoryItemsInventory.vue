@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card :loading="loading">
         <v-card-title>
             Factory Items
             <v-spacer></v-spacer>
@@ -60,6 +60,11 @@
                 <v-text-field type="number" class="w-100" v-model="item.quantity" dense hide-details solo
                     @change="updateQuantity(item)"></v-text-field>
             </template>
+            <!-- progress -->
+            <template v-slot:[`item.progress`]="{ item }">
+                <v-chip v-if="item.progress == 'finished'" class="success" small>Finished</v-chip>
+                <v-chip v-else class="warning" small>In progress</v-chip>
+            </template>
             <!-- Actions -->
             <template v-slot:[`item.actions`]="{ item }">
                 <v-btn class="error" x-small @click="showConfirmation(item)">Delete</v-btn>
@@ -85,9 +90,11 @@ import * as fb from '@/firebase'
 export default {
     data() {
         return {
+            loading: true,
             headers: [
                 { text: 'Item Name', value: 'itemName' },
                 { text: 'Quantity', value: 'quantity' },
+                { text: 'Progress', value: 'progress' },
                 { text: "Actions", value: "actions", align: "right", sortable: false },
             ],
             items: [],
@@ -104,17 +111,22 @@ export default {
 
     methods: {
         async refreshItems() {
+            this.loading = true
             this.items = await fb.getFactoryItems()
+            this.loading = false
         },
+
 
         close() {
             this.dialog = false
         },
 
         async save() {
+            this.loading = true
             await fb.addFactoryItem(this.item_info.itemName, Number(this.item_info.quantity))
             await this.refreshItems()
             this.close()
+            this.loading = false
         },
 
         showConfirmation(item) {
@@ -123,14 +135,18 @@ export default {
         },
 
         async deleteItem(item) {
+            this.loading = true
             fb.deleteFactoryItem(item.id)
             await this.refreshItems()
             this.confirmationDialog = false
             this.deletingItem = null
+            this.loading = false
         },
 
         async updateQuantity(item) {
+            this.loading = true
             fb.updateFactoryItemQuantity(item.id, item.quantity)
+            this.loading = false
         }
     },
 

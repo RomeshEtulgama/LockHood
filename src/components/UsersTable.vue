@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card :loading="loading">
         <v-card-title>
             Employee Management
             <v-spacer></v-spacer>
@@ -25,6 +25,7 @@ import * as fb from '@/firebase'
 export default {
     data() {
         return {
+            loading: true,
             headers: [
                 { text: 'Display Name', value: 'displayName' },
                 { text: 'Email', value: 'email' },
@@ -39,22 +40,30 @@ export default {
 
     methods: {
         async approveUser(user) {
+            this.loading = true
             await fb.approveUser(user.uid)
             await this.refreshUsers()
+            this.loading = false
         },
 
         async disapproveUser(user) {
+            this.loading = true
             await fb.disapproveUser(user.uid)
             await this.refreshUsers()
+            this.loading = false
         },
 
         async changeUserClass(user) {
+            this.loading = true
             await fb.changeUserClass(user.uid, user.class)
             await this.refreshUsers()
+            this.loading = false
         },
 
         async refreshUsers() {
+            this.loading = true
             this.users = await fb.getUsers()
+            this.loading = false
         }
     },
 

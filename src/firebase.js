@@ -159,6 +159,20 @@ async function changeUserClass(userId, user_class) {
     })
 }
 
+async function getEmployees() {
+    var employees = []
+    const q = query(ref(rtd, 'users'));
+    await get(q).then((snapshot) => {
+        snapshot.forEach((childSnapshot) => {
+            const user = childSnapshot.val()
+            user.uid = childSnapshot.key
+            if (user.class == 'Employee')
+                employees.push(user);
+        });
+    })
+    return employees;
+}
+
 //functions/rawItems ---------------------------------------------------------------------------------------------------!
 
 /* adds an item to the "rawItems" collection in a database with the specified name and quantity. */
@@ -295,6 +309,39 @@ async function updateOrderQuantity(itemId, quantity) {
     });
 }
 
+async function getPendingOrders() {
+    var pendingOrders = []
+    const querySnapshot = await getDocs(ordersCollection);
+    querySnapshot.forEach((doc) => {
+        var pendingOrder = doc.data()
+        if (pendingOrder.customer && !pendingOrder.accepted) {
+            pendingOrder.id = doc.id
+            if (pendingOrder.customLockType) {
+                pendingOrder.lockType = pendingOrder.customLockType
+            }
+            pendingOrders.push(pendingOrder)
+        }
+    });
+
+    return pendingOrders
+}
+
+async function acceptOrder(item) {
+    const docRef = doc(ordersCollection, item.id)
+
+    await updateDoc(docRef, {
+        accepted: true,
+        kanBan_info: item.kanBan_info
+    });
+
+    item.kanBan_info.assigned_employees.forEach(async employee => {
+        const userRef = ref(rtd, 'users/' + employee)
+        await update(userRef, {
+            'assigned_orders': item
+        })
+    })
+}
+
 export {
     db,
     auth,
@@ -323,5 +370,8 @@ export {
     addOrder,
     deleteOrder,
     updateOrderQuantity,
-    getLockTypes
+    getLockTypes,
+    getPendingOrders,
+    acceptOrder,
+    getEmployees
 }

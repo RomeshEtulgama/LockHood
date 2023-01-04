@@ -3,8 +3,8 @@
         <h2>KanBan</h2>
 
         <v-row>
-            <v-col cols="12" lg="5" md="6" sm="12">
-                <RawItems />
+            <v-col cols="12" lg="6" md="6" sm="12">
+                <PendingOrders />
             </v-col>
         </v-row>
 
@@ -12,12 +12,12 @@
 </template>
 
 <script>
-import RawItems from '@/components/RawItemsInventory.vue';
+import PendingOrders from '@/components/PendingOrders.vue';
 export default {
     name: 'KanBan',
 
     components: {
-        RawItems,
+        PendingOrders,
     },
 
     data: () => ({}),

@@ -68,7 +68,7 @@
                 <v-icon>mdi-refresh</v-icon>
             </v-btn>
         </v-card-title>
-        <v-data-table :headers="headers" :items="orders" :orders-per-page="10" :search="search" class="elevation-1"
+        <v-data-table :headers="headers" :items="orders" :items-per-page="10" :search="search" class="elevation-1"
             dense>
             <!-- Quantity -->
             <template v-slot:[`item.quantity`]="{ item }">
@@ -81,7 +81,12 @@
             </template>
             <!-- Actions -->
             <template v-slot:[`item.actions`]="{ item }">
-                <v-btn class="error" x-small @click="showConfirmation(item)">Delete</v-btn>
+                <v-icon small class="mr-2" @click="editOrder(item)">
+                    mdi-pencil
+                </v-icon>
+                <v-icon small @click="showConfirmation(item)">
+                    mdi-delete
+                </v-icon>
             </template>
         </v-data-table>
         <v-dialog v-model="confirmationDialog" max-width="290">
@@ -162,6 +167,10 @@ export default {
 
         async updateQuantity(order) {
             fb.updateOrderQuantity(order.id, order.quantity)
+        },
+
+        editOrder(item) {
+            console.log("Edit order", item)
         }
     },
 

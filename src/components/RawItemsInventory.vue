@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card :loading="loading">
         <v-card-title>
             Raw Items
             <v-spacer></v-spacer>
@@ -85,6 +85,7 @@ import * as fb from '@/firebase'
 export default {
     data() {
         return {
+            loading: true,
             headers: [
                 { text: 'Item Name', value: 'itemName' },
                 { text: 'Quantity', value: 'quantity' },
@@ -104,7 +105,9 @@ export default {
 
     methods: {
         async refreshItems() {
+            this.loading = true
             this.items = await fb.getRawItems()
+            this.loading = false
         },
 
         close() {
@@ -112,9 +115,11 @@ export default {
         },
 
         async save() {
+            this.loading = true
             await fb.addRawItem(this.item_info.itemName, Number(this.item_info.quantity))
             await this.refreshItems()
             this.close()
+            this.loading = false
         },
 
         showConfirmation(item) {
@@ -123,14 +128,18 @@ export default {
         },
 
         async deleteItem(item) {
+            this.loading = true
             fb.deleteRawItem(item.id)
             await this.refreshItems()
             this.confirmationDialog = false
             this.deletingItem = null
+            this.loading = false
         },
 
         async updateQuantity(item) {
+            this.loading = true
             fb.updateRawItemQuantity(item.id, item.quantity)
+            this.loading = false
         }
     },
 
