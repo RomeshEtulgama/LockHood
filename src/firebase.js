@@ -297,20 +297,6 @@ async function getOrders() {
     return orders
 }
 
-/* retrieves all documents from the "orders" collection in a database and returns an array of unique lock types that have been specified in the "customLockType" field of these documents. The array also includes the string "Custom" as the last element. */
-async function getLockTypes() {
-    var lockTypes = []
-    const querySnapshot = await getDocs(ordersCollection);
-    querySnapshot.forEach((doc) => {
-        var order = doc.data()
-        if (order.customLockType) {
-            lockTypes.push(order.customLockType)
-        }
-    });
-    lockTypes.push("Custom")
-    return lockTypes
-}
-
 /* adds an order to the "orders" collection in a database with the specified customer, lock type, custom lock type, description, and quantity. If the lock type is "Custom", the custom lock type field is required. */
 async function addOrder(customer, lockType, customLockType, description, quantity) {
     await this.addData(ordersCollection, {
@@ -399,7 +385,6 @@ export {
     addOrder,
     deleteOrder,
     updateOrderQuantity,
-    getLockTypes,
     getPendingOrders,
     acceptOrder,
     getEmployees,

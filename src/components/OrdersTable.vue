@@ -29,30 +29,38 @@
                                             :rules="[() => !!order_info.customer || 'Customer Name is required',]"
                                             required dense></v-text-field>
                                     </v-col>
+                                </v-row>
+                                <v-row>
                                     <!-- Lock Type -->
                                     <v-col cols="12" sm="4" md="6" lg="6">
-                                        <v-select :items="lockTypes" v-model="order_info.lockType" label="Lock Type"
+                                        <v-select :items="factoryItems" v-model="order_info.lockType" label="Lock Type"
                                             :rules="[() => !!order_info.lockType || 'Lock Type is required',]" required
-                                            dense></v-select>
-                                    </v-col>
-                                    <!-- Custom Lock Type -->
-                                    <v-col cols="12" sm="8" md="6" lg="6">
-                                        <v-text-field v-if="order_info.lockType == 'Custom'"
-                                            v-model="order_info.customLockType" label="Custom Lock Type"
-                                            :rules="[() => !!order_info.lockType || 'Lock Type is required',]" required
-                                            dense></v-text-field>
-                                    </v-col>
-                                    <!-- Description -->
-                                    <v-col cols="12" sm="6" md="8" lg="8" class="py-0">
-                                        <v-textarea filled v-model="order_info.description" label="Description"
-                                            dense></v-textarea>
+                                            dense item-text="productName" item-value="id"></v-select>
                                     </v-col>
                                     <!-- Quantity -->
-                                    <v-col cols="12" sm="6" md="8" lg="8">
+                                    <v-col cols="12" sm="4" md="6" lg="6">
                                         <v-text-field v-model="order_info.quantity" label="Quantity" type="number"
                                             :rules="[() => !!order_info.quantity || 'Quantity is required',]" required
                                             dense></v-text-field>
                                     </v-col>
+                                </v-row>
+                                <v-row>
+                                    <!-- Delivery Date -->
+                                    <v-col cols="12" sm="6" md="8" lg="8">
+                                        <v-menu v-model="dateMenu" :close-on-content-click="false" :nudge-right="40"
+                                            transition="scale-transition" offset-y min-width="auto">
+                                            <template v-slot:activator="{ on, attrs }">
+                                                <v-text-field v-model="order_info.deliveryDate" label="Delivery Date"
+                                                    prepend-icon="mdi-calendar" readonly v-bind="attrs"
+                                                    v-on="on"></v-text-field>
+                                            </template>
+                                            <v-date-picker v-model="order_info.deliveryDate"
+                                                @input="dateMenu = false"></v-date-picker>
+                                        </v-menu>
+                                    </v-col>
+                                </v-row>
+                                <v-row v-if="order_info.lockType && order_info.quantity">
+                                    <span>{{ Math.floor(Math.random() * 20) + 1 }} </span> &nbsp; days to complete.
                                 </v-row>
                             </v-form>
                         </v-container>
@@ -74,6 +82,10 @@
             <template v-slot:[`item.quantity`]="{ item }">
                 <v-text-field type="number" class="w-100" v-model="item.quantity" dense solo hide-details
                     @change="updateQuantity(item)"></v-text-field>
+            </template>
+            <!-- Accepted -->
+            <template v-slot:[`item.accepted`]="{ item }">
+                <v-icon v-if="item.accepted" color="success">mdi-check</v-icon>
             </template>
             <!-- Progress -->
             <template v-slot:[`item.progress`]="{ item }">
@@ -112,22 +124,25 @@ export default {
             headers: [
                 { text: 'Customer', value: 'customer' },
                 { text: 'Lock Type', value: 'lockType' },
-                { text: 'Description', value: 'description' },
                 { text: 'Quantity', value: 'quantity' },
+                { text: 'Accepted', value: 'accepted' },
                 { text: 'Progress', value: 'progress' },
                 { text: "Actions", value: "actions", align: "right", sortable: false },
             ],
             orders: [],
-            lockTypes: ['Custom'],
+            factoryItems: ['Custom'],
             search: "",
-
+            dateMenu: false,
             order_info: {
                 customer: "",
                 lockType: "",
                 customLockType: "",
                 description: "",
                 quantity: "",
+                deliveryDate: ""
             },
+
+            editOrderInfo: false,
 
             dialog: false,
             valid: true,
@@ -140,7 +155,7 @@ export default {
     methods: {
         async refreshOrders() {
             this.orders = await fb.getOrders()
-            this.lockTypes = await fb.getLockTypes()
+            this.factoryItems = await fb.getFactoryItems()
         },
 
         close() {
@@ -170,7 +185,8 @@ export default {
         },
 
         editOrder(item) {
-            console.log("Edit order", item)
+            this.editOrderInfo = item.id
+            this.order_info = item
         }
     },
 
