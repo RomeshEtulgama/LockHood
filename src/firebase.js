@@ -279,6 +279,7 @@ async function updateFactoryItemQuantity(itemId, quantity) {
 }
 
 //functions/orders ---------------------------------------------------------------------------------------------------!
+
 /* retrieves all documents from the "orders" collection in a database and returns them as an array of objects. Each object in the array contains the field "customer" from the corresponding document in the collection, as well as an additional field "id" which is the document ID. If the document contains a field "customLockType", it is added to the object as a field "lockType". */
 async function getOrders() {
     var orders = []
@@ -287,30 +288,25 @@ async function getOrders() {
         var order = doc.data()
         if (order.customer) {
             order.id = doc.id
-            if (order.customLockType) {
-                order.lockType = order.customLockType
-            }
             orders.push(order)
         }
     });
-
     return orders
 }
 
 /* adds an order to the "orders" collection in a database with the specified customer, lock type, custom lock type, description, and quantity. If the lock type is "Custom", the custom lock type field is required. */
-async function addOrder(customer, lockType, customLockType, description, quantity) {
+async function addOrder(order) {
     await this.addData(ordersCollection, {
-        customer: customer,
-        lockType: lockType,
-        customLockType: customLockType,
-        description: description,
-        quantity: quantity
+        customer: order.customer,
+        lockType: order.lockType,
+        quantity: order.quantity,
+        deliveryDate: order.deliveryDate,
     })
 }
 
 /*  removes a document with the specified ID from the "orders" collection in a database. */
-async function deleteOrder(itemId) {
-    await removeDoc(ordersCollection, itemId)
+async function deleteOrder(orderId) {
+    await removeDoc(ordersCollection, orderId)
 }
 
 /* updates the "quantity" field of a document with the specified ID in the "orders" collection in a database. */

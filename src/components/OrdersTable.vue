@@ -80,10 +80,34 @@
         </v-card-title>
         <v-data-table :headers="headers" :items="orders" :items-per-page="10" :search="search" class="elevation-1"
             dense>
+            <!-- Customer -->
+            <template v-slot:[`item.customer`]="{ item }">
+                <v-text-field v-model="item.customer" dense solo hide-details
+                    @change="updateCustomer(item)"></v-text-field>
+            </template>
+            <!-- Lock Type -->
+            <template v-slot:[`item.lockType`]="{ item }">
+                <v-select v-if="!item.accepted" :items="factoryItems" v-model="item.lockType" dense
+                    item-text="productName" item-value="id" hide-details></v-select>
+                <span v-else>{{ getLockType(item.lockType) }}</span>
+            </template>
             <!-- Quantity -->
             <template v-slot:[`item.quantity`]="{ item }">
-                <v-text-field type="number" class="w-100" v-model="item.quantity" dense solo hide-details
-                    @change="updateQuantity(item)"></v-text-field>
+                <v-text-field v-if="!item.accepted" type="number" class="w-100" v-model="item.quantity" dense solo
+                    hide-details @change="updateQuantity(item)"></v-text-field>
+                <span v-else>{{ item.quantity }}</span>
+            </template>
+            <!-- Delivery Date -->
+            <template v-slot:[`item.deliveryDate`]="{ item }">
+                <v-menu v-if="!item.accepted" v-model="editDateMenu" :close-on-content-click="false" :nudge-right="40"
+                    transition="scale-transition" offset-y min-width="auto">
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-text-field v-model="item.deliveryDate" label="Delivery Date" prepend-icon="mdi-calendar"
+                            readonly v-bind="attrs" v-on="on" hide-details></v-text-field>
+                    </template>
+                    <v-date-picker v-model="item.deliveryDate" @input="editDateMenu = false"></v-date-picker>
+                </v-menu>
+                <span v-else>{{ item.deliveryDate }}</span>
             </template>
             <!-- Accepted -->
             <template v-slot:[`item.accepted`]="{ item }">
@@ -95,9 +119,6 @@
             </template>
             <!-- Actions -->
             <template v-slot:[`item.actions`]="{ item }">
-                <v-icon small class="mr-2" @click="editOrder(item)">
-                    mdi-pencil
-                </v-icon>
                 <v-icon small @click="showConfirmation(item)">
                     mdi-delete
                 </v-icon>
@@ -139,6 +160,7 @@ export default {
             search: "",
 
             dateMenu: false,
+            editDateMenu: false,
 
             order_info: {
                 customer: "",
@@ -169,9 +191,8 @@ export default {
 
         async save() {
             if (this.order_info.customer && this.order_info.lockType && Number(this.order_info.quantity) && this.order_info.deliveryDate) {
-                console.log(this.order_info)
-                // await fb.addOrder(this.order_info)
-                // await this.refreshOrders()
+                await fb.addOrder(this.order_info)
+                await this.refreshOrders()
                 this.close()
             }
         },
@@ -195,6 +216,11 @@ export default {
         editOrder(item) {
             this.editOrderInfo = item.id
             this.order_info = item
+        },
+
+        getLockType(id) {
+            const product = this.factoryItems.find(product => product.id === id);
+            return product ? product.productName : null;
         }
     },
 

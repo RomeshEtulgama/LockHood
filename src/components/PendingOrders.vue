@@ -12,6 +12,10 @@
         </v-card-title>
         <v-data-table :headers="headers" :items="pendingOrders" :items-per-page="10" :search="search"
             class="elevation-1" dense>
+            <!-- Lock Type -->
+            <template v-slot:[`item.lockType`]="{ item }">
+                {{ getLockType(item.lockType) }}
+            </template>
             <!-- Actions -->
             <template v-slot:[`item.actions`]="{ item }">
                 <v-btn x-small class="mr-2 success" @click="showConfirmation(item)">
@@ -73,7 +77,6 @@ export default {
             headers: [
                 { text: 'Order ID', value: 'id' },
                 { text: 'Lock Type', value: 'lockType' },
-                { text: 'Description', value: 'description' },
                 { text: 'Quantity', value: 'quantity' },
                 { text: "Actions", value: "actions", align: "right", sortable: false },
             ],
@@ -97,7 +100,8 @@ export default {
             valid: true,
 
             employees: [],
-            rawItems: []
+            rawItems: [],
+            factoryItems: [],
         }
     },
 
@@ -106,6 +110,7 @@ export default {
             this.pendingOrders = await fb.getPendingOrders()
             this.employees = await fb.getEmployees()
             this.rawItems = await fb.getRawItems()
+            this.factoryItems = await fb.getFactoryItems()
         },
 
         close() {
@@ -126,6 +131,11 @@ export default {
 
         addRequiredItem() {
             this.kanBan_info.required_raw_items.push({ item: "", quantity: "" })
+        },
+
+        getLockType(id) {
+            const product = this.factoryItems.find(product => product.id === id);
+            return product ? product.productName : null;
         }
     },
 
