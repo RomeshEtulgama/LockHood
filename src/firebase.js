@@ -318,6 +318,27 @@ async function updateOrderQuantity(itemId, quantity) {
     });
 }
 
+async function updateOrderCustomer(itemId, customer) {
+    const docRef = doc(ordersCollection, itemId)
+    await updateDoc(docRef, {
+        customer: customer
+    });
+}
+
+async function updateOrderLockType(itemId, lockType) {
+    const docRef = doc(ordersCollection, itemId)
+    await updateDoc(docRef, {
+        lockType: lockType
+    });
+}
+
+async function updateOrderDeliveryDate(itemId, deliveryDate) {
+    const docRef = doc(ordersCollection, itemId)
+    await updateDoc(docRef, {
+        deliveryDate: deliveryDate
+    });
+}
+
 async function getPendingOrders() {
     var pendingOrders = []
     const querySnapshot = await getDocs(ordersCollection);
@@ -351,6 +372,8 @@ async function acceptOrder(item) {
     })
 
 }
+
+
 
 export {
     db,
@@ -386,5 +409,8 @@ export {
     getEmployees,
     updateRawItemName,
     getFactoryItem,
-    updateFactoryItem
+    updateFactoryItem,
+    updateOrderCustomer,
+    updateOrderLockType,
+    updateOrderDeliveryDate,
 }

@@ -78,8 +78,8 @@
                 <v-icon>mdi-refresh</v-icon>
             </v-btn>
         </v-card-title>
-        <v-data-table :headers="headers" :items="orders" :items-per-page="10" :search="search" class="elevation-1"
-            dense>
+        <v-data-table :headers="headers" :items="orders" :items-per-page="10" :search="search" class="elevation-1" dense
+            :loading="loading">
             <!-- Customer -->
             <template v-slot:[`item.customer`]="{ item }">
                 <v-text-field v-model="item.customer" dense solo hide-details
@@ -88,7 +88,7 @@
             <!-- Lock Type -->
             <template v-slot:[`item.lockType`]="{ item }">
                 <v-select v-if="!item.accepted" :items="factoryItems" v-model="item.lockType" dense
-                    item-text="productName" item-value="id" hide-details></v-select>
+                    item-text="productName" item-value="id" hide-details @change="updateLockType(item)"></v-select>
                 <span v-else>{{ getLockType(item.lockType) }}</span>
             </template>
             <!-- Quantity -->
@@ -105,7 +105,8 @@
                         <v-text-field v-model="item.deliveryDate" label="Delivery Date" prepend-icon="mdi-calendar"
                             readonly v-bind="attrs" v-on="on" hide-details></v-text-field>
                     </template>
-                    <v-date-picker v-model="item.deliveryDate" @input="editDateMenu = false"></v-date-picker>
+                    <v-date-picker v-model="item.deliveryDate" @input="editDateMenu = false"
+                        @change="updateDeliveryDate(item)"></v-date-picker>
                 </v-menu>
                 <span v-else>{{ item.deliveryDate }}</span>
             </template>
@@ -144,6 +145,8 @@ import * as fb from '@/firebase'
 export default {
     data() {
         return {
+            loading: false,
+
             headers: [
                 { text: 'Customer', value: 'customer' },
                 { text: 'Lock Type', value: 'lockType' },
@@ -181,8 +184,10 @@ export default {
 
     methods: {
         async refreshOrders() {
+            this.loading = true;
             this.orders = await fb.getOrders()
             this.factoryItems = await fb.getFactoryItems()
+            this.loading = false;
         },
 
         close() {
@@ -190,12 +195,15 @@ export default {
         },
 
         async save() {
+            this.loading = true;
             if (this.order_info.customer && this.order_info.lockType && Number(this.order_info.quantity) && this.order_info.deliveryDate) {
                 await fb.addOrder(this.order_info)
                 await this.refreshOrders()
                 this.close()
             }
+            this.loading = false;
         },
+
 
         showConfirmation(order) {
             this.deletingOrder = order
@@ -203,14 +211,41 @@ export default {
         },
 
         async deleteOrder(order) {
-            fb.deleteOrder(order.id)
+            this.loading = true;
+            await fb.deleteOrder(order.id)
             await this.refreshOrders()
             this.confirmationDialog = false
             this.deletingOrder = null
+            this.loading = false;
         },
 
+
         async updateQuantity(order) {
-            fb.updateOrderQuantity(order.id, order.quantity)
+            this.loading = true;
+            await fb.updateOrderQuantity(order.id, order.quantity)
+            await this.refreshOrders()
+            this.loading = false;
+        },
+
+        async updateCustomer(order) {
+            this.loading = true;
+            await fb.updateOrderCustomer(order.id, order.customer)
+            await this.refreshOrders()
+            this.loading = false;
+        },
+
+        async updateLockType(order) {
+            this.loading = true;
+            await fb.updateOrderLockType(order.id, order.lockType)
+            await this.refreshOrders()
+            this.loading = false;
+        },
+
+        async updateDeliveryDate(order) {
+            this.loading = true;
+            await fb.updateOrderDeliveryDate(order.id, order.deliveryDate)
+            await this.refreshOrders()
+            this.loading = false;
         },
 
         editOrder(item) {
