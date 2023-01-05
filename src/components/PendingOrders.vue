@@ -25,54 +25,91 @@
             </template>
         </v-data-table>
 
-        <v-dialog v-model="orderAcceptanceDialog" max-width="600">
+        <v-dialog v-model="orderAcceptanceDialog" max-width="1000">
             <v-card v-if="acceptingOrder.product">
                 <v-card-title>{{ acceptingOrder.customer }}</v-card-title>
                 <v-card-subtitle>Delivery Date : {{ acceptingOrder.deliveryDate }}</v-card-subtitle>
                 <v-card-text>
                     <v-row>
-                        <v-col cols="12" lg="8" md="8" sm="8">
+                        <v-col cols="12" lg="4" md="4" sm="4">
                             <v-text-field label="Product Name" :value="acceptingOrder.product.productName" readonly
                                 hide-details />
                         </v-col>
-                        <v-col cols="12" lg="4" md="4" sm="4">
+                        <v-col cols="12" lg="2" md="2" sm="2">
                             <v-text-field label="Quantity" :value="acceptingOrder.quantity" readonly hide-details />
                         </v-col>
                     </v-row>
                     <v-row>
-                        <v-list subheader two-line>
-                            <v-subheader>Required Raw Items List</v-subheader>
+                        <v-col cols="12" lg="6" md="12" sm="12">
+                            <v-card>
+                                <v-card-title>
+                                    Required Raw Items List
+                                </v-card-title>
+                                <v-card-text>
+                                    <v-list subheader two-line>
+                                        <v-list-item v-for="rawItem in acceptingOrder.product.required_raw_items"
+                                            :key="rawItem.id">
+                                            <v-list-item-content>
+                                                <v-list-item-title v-text="rawItem.rawItem"></v-list-item-title>
 
-                            <v-list-item v-for="rawItem in acceptingOrder.product.required_raw_items" :key="rawItem.id">
-                                <v-list-item-content>
-                                    <v-list-item-title v-text="rawItem.rawItem"></v-list-item-title>
+                                                <v-list-item-subtitle
+                                                    v-text="'Each lock needs ' + rawItem.quantity + ' ' + rawItem.rawItem"></v-list-item-subtitle>
+                                            </v-list-item-content>
 
-                                    <v-list-item-subtitle
-                                        v-text="'Each lock needs ' + rawItem.quantity + ' ' + rawItem.rawItem"></v-list-item-subtitle>
-                                </v-list-item-content>
+                                            <v-list-item-action>
 
-                                <v-list-item-action>
-                                    <span
-                                        v-if="Number(rawItem.available_quantity) >= Number(rawItem.quantity) * Number(acceptingOrder.quantity)"
-                                        class="text-h6">{{
-                                            Number(rawItem.quantity) * Number(acceptingOrder.quantity)
-                                        }}</span>
-                                    <v-tooltip v-else bottom color="error">
-                                        <template v-slot:activator="{ on, attrs }">
-                                            <span v-bind="attrs" v-on="on" class="error--text text-h6">{{
-                                                Number(rawItem.quantity) * Number(acceptingOrder.quantity)
-                                            }}</span>
-                                        </template>
-                                        <span>Only {{ rawItem.available_quantity + ' ' + rawItem.rawItem }} available in
-                                            stock!</span>
-                                    </v-tooltip>
+                                                <v-tooltip
+                                                    v-if="Number(rawItem.available_quantity) >= Number(rawItem.quantity) * Number(acceptingOrder.quantity)"
+                                                    bottom color="success">
+                                                    <template v-slot:activator="{ on, attrs }">
+                                                        <span v-bind="attrs" v-on="on" class="text-h6">{{
+                                                            Number(rawItem.quantity) * Number(acceptingOrder.quantity)
+                                                        }}
+                                                        </span>
+                                                    </template>
+                                                    <span>{{ rawItem.available_quantity + ' ' + rawItem.rawItem }}
+                                                        available
+                                                        in
+                                                        stock.</span>
+                                                </v-tooltip>
+                                                <v-tooltip v-else bottom color="error">
+                                                    <template v-slot:activator="{ on, attrs }">
+                                                        <span v-bind="attrs" v-on="on" class="error--text text-h6">{{
+                                                            Number(rawItem.quantity) * Number(acceptingOrder.quantity)
+                                                        }}</span>
+                                                    </template>
+                                                    <span>Only {{ rawItem.available_quantity + ' ' + rawItem.rawItem }}
+                                                        available in
+                                                        stock!</span>
+                                                </v-tooltip>
 
-                                </v-list-item-action>
-                            </v-list-item>
+                                            </v-list-item-action>
+                                        </v-list-item>
+                                    </v-list>
+                                </v-card-text>
+                            </v-card>
+                        </v-col>
+                        <v-col cols="12" lg="6" md="12" sm="12">
+                            <v-card>
+                                <v-card-title>Assign Employees</v-card-title>
+                                <v-card-text>
+                                    <v-list subheader two-line>
+                                        <v-list-item v-for="employee in employees" :key="employee.id">
+                                            <v-list-item-content>
+                                                <v-list-item-title v-text="employee.displayName"></v-list-item-title>
 
-                            <v-divider inset></v-divider>
+                                                <v-list-item-subtitle
+                                                    v-text="'Currently assigned in ' + Math.floor(Math.random() * 10) + ' projects.'"></v-list-item-subtitle>
+                                            </v-list-item-content>
 
-                        </v-list>
+                                            <v-list-item-action>
+                                                <v-btn class="success" small>Assign</v-btn>
+                                            </v-list-item-action>
+                                        </v-list-item>
+                                    </v-list>
+                                </v-card-text>
+                            </v-card>
+                        </v-col>
                     </v-row>
 
                 </v-card-text>
@@ -95,6 +132,7 @@ export default {
             loading: false,
             headers: [
                 { text: 'Order ID', value: 'id' },
+                { text: 'Customer', value: 'customer' },
                 { text: 'Lock Type', value: 'lockType' },
                 { text: 'Quantity', value: 'quantity' },
                 { text: 'Delivery Date', value: 'deliveryDate' },
@@ -140,21 +178,31 @@ export default {
             this.orderAcceptanceDialog = false
         },
 
-        async acceptOrder(item) {
+        async acceptOrder(order) {
             this.loading = true;
-            // await fb.acceptOrder(item)
-            if (this.validateOrder(item))
-                console.log(item)
+            if (await this.validateOrder(order)) {
+                await fb.acceptOrder(order)
+            }
             this.close()
             this.loading = false;
         },
 
-        validateOrder(item) {
-            console.log(item)
-            return false
+        async validateOrder(order) {
+            var valid = true;
+            await this.assignAcceptingOrder(order)
+            this.acceptingOrder.product.required_raw_items.forEach(rawItem => {
+                if (!(Number(rawItem.available_quantity) >= Number(rawItem.quantity) * Number(this.acceptingOrder.quantity)))
+                    valid = false;
+            })
+            return valid
         },
 
         async showConfirmation(order) {
+            await this.assignAcceptingOrder(order)
+            this.orderAcceptanceDialog = true
+        },
+
+        async assignAcceptingOrder(order) {
             this.acceptingOrder = order
             this.acceptingOrder.product = await fb.getFactoryItem(this.acceptingOrder.lockType)
             await Promise.all(
@@ -164,8 +212,6 @@ export default {
                     item.available_quantity = raw_Item.quantity;
                 })
             );
-            this.orderAcceptanceDialog = true
-            console.log(this.acceptingOrder)
         },
 
         addRequiredItem() {

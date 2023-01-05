@@ -360,16 +360,15 @@ async function acceptOrder(item) {
     const docRef = doc(ordersCollection, item.id)
 
     await updateDoc(docRef, {
-        accepted: true,
-        kanBan_info: item.kanBan_info
+        accepted: true
     });
 
-    item.kanBan_info.assigned_employees.forEach(async employee => {
-        const userRef = ref(rtd, 'users/' + employee)
-        await update(userRef, {
-            'assigned_orders': item
-        })
-    })
+    // item.kanBan_info.assigned_employees.forEach(async employee => {
+    //     const userRef = ref(rtd, 'users/' + employee)
+    //     await update(userRef, {
+    //         'assigned_orders': item
+    //     })
+    // })
 
 }
 

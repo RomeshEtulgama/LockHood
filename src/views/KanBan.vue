@@ -3,7 +3,7 @@
         <h2>KanBan</h2>
 
         <v-row>
-            <v-col cols="12" lg="6" md="6" sm="12">
+            <v-col cols="12" lg="8" md="12" sm="12">
                 <PendingOrders />
             </v-col>
         </v-row>
