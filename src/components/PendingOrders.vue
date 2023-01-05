@@ -25,7 +25,7 @@
             </template>
         </v-data-table>
 
-        <v-dialog v-model="orderAcceptanceDialog" max-width="1000">
+        <v-dialog v-model="orderAcceptanceDialog" max-width="1200">
             <v-card v-if="acceptingOrder.product">
                 <v-card-title>{{ acceptingOrder.customer }}</v-card-title>
                 <v-card-subtitle>Delivery Date : {{ acceptingOrder.deliveryDate }}</v-card-subtitle>
@@ -93,17 +93,27 @@
                             <v-card>
                                 <v-card-title>Assign Employees</v-card-title>
                                 <v-card-text>
+                                    <!-- <span v-for="(employee, i) in assigningEmployees" :key="i">{{
+                                        employee
+                                    }}</span> -->
                                     <v-list subheader two-line>
-                                        <v-list-item v-for="employee in employees" :key="employee.id">
+                                        <v-list-item v-for="(person, i) in assigningEmployees" :key="i">
                                             <v-list-item-content>
-                                                <v-list-item-title v-text="employee.displayName"></v-list-item-title>
-
+                                                <v-select v-model="person.employee" :items="employees" item-value="uid"
+                                                    item-text="displayName" hide-details></v-select>
                                                 <v-list-item-subtitle
-                                                    v-text="'Currently assigned in ' + Math.floor(Math.random() * 10) + ' projects.'"></v-list-item-subtitle>
+                                                    v-text="'Assigned in ' + Math.floor(Math.random() * 10) + ' orders.'"></v-list-item-subtitle>
                                             </v-list-item-content>
 
                                             <v-list-item-action>
-                                                <v-btn class="success" small>Assign</v-btn>
+                                                <v-text-field type="number" label="Assigned Quantity"
+                                                    v-model="person.quantity" :max="remainingQuantity" :min="0"
+                                                    style="min-width: 200px" hide-details single-line></v-text-field>
+                                            </v-list-item-action>
+                                        </v-list-item>
+                                        <v-list-item>
+                                            <v-list-item-action>
+                                                <v-btn @click="addEmployeeToAcceptingOrder()">Add Employee</v-btn>
                                             </v-list-item-action>
                                         </v-list-item>
                                     </v-list>
@@ -142,6 +152,7 @@ export default {
             search: "",
 
             orderAcceptanceDialog: false,
+
             acceptingOrder: {
                 customer: "",
                 deliveryDate: "",
@@ -149,7 +160,8 @@ export default {
                 product: {
                     productName: "",
                     required_raw_items: []
-                }
+                },
+                assignedEmployees: []
             },
 
             order_info: null,
@@ -161,6 +173,14 @@ export default {
             rawItems: [],
             factoryItems: [],
 
+            assigningEmployees: [],
+
+        }
+    },
+
+    computed: {
+        remainingQuantity() {
+            return this.acceptingOrder.quantity
         }
     },
 
@@ -212,6 +232,8 @@ export default {
                     item.available_quantity = raw_Item.quantity;
                 })
             );
+            this.acceptingOrder.assignedEmployees = [{ employee: null, quantity: null }]
+            console.log(this.acceptingOrder)
         },
 
         addRequiredItem() {
@@ -221,6 +243,11 @@ export default {
         getLockType(id) {
             const product = this.factoryItems.find(product => product.id === id);
             return product ? product.productName : null;
+        },
+
+        addEmployeeToAcceptingOrder() {
+            this.assigningEmployees.push({ employee: "", quantity: 0 })
+            this.acceptingOrder.assignedEmployees = this.assigningEmployees
         }
     },
 
