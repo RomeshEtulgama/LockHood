@@ -32,13 +32,13 @@
                                 </v-row>
                                 <v-row>
                                     <!-- Lock Type -->
-                                    <v-col cols="12" sm="4" md="6" lg="6">
+                                    <v-col cols="12" sm="6" md="6" lg="6">
                                         <v-select :items="factoryItems" v-model="order_info.lockType" label="Lock Type"
                                             :rules="[() => !!order_info.lockType || 'Lock Type is required',]" required
                                             dense item-text="productName" item-value="id"></v-select>
                                     </v-col>
                                     <!-- Quantity -->
-                                    <v-col cols="12" sm="4" md="6" lg="6">
+                                    <v-col cols="12" sm="6" md="6" lg="6">
                                         <v-text-field v-model="order_info.quantity" label="Quantity" type="number"
                                             :rules="[() => !!order_info.quantity || 'Quantity is required',]" required
                                             dense></v-text-field>
@@ -60,7 +60,9 @@
                                     </v-col>
                                 </v-row>
                                 <v-row v-if="order_info.lockType && order_info.quantity">
-                                    <span>{{ Math.floor(Math.random() * 20) + 1 }} </span> &nbsp; days to complete.
+                                    <v-col>
+                                        <span>{{ Math.floor(Math.random() * 20) + 1 }} </span> &nbsp; days to complete.
+                                    </v-col>
                                 </v-row>
                             </v-form>
                         </v-container>
@@ -125,19 +127,22 @@ export default {
                 { text: 'Customer', value: 'customer' },
                 { text: 'Lock Type', value: 'lockType' },
                 { text: 'Quantity', value: 'quantity' },
+                { text: 'Delivery Date', value: 'deliveryDate' },
                 { text: 'Accepted', value: 'accepted' },
                 { text: 'Progress', value: 'progress' },
                 { text: "Actions", value: "actions", align: "right", sortable: false },
             ],
+
             orders: [],
-            factoryItems: ['Custom'],
+            factoryItems: [],
+
             search: "",
+
             dateMenu: false,
+
             order_info: {
                 customer: "",
                 lockType: "",
-                customLockType: "",
-                description: "",
                 quantity: "",
                 deliveryDate: ""
             },
@@ -163,9 +168,12 @@ export default {
         },
 
         async save() {
-            await fb.addOrder(this.order_info.customer, this.order_info.lockType, this.order_info.customLockType, this.order_info.description, Number(this.order_info.quantity))
-            await this.refreshOrders()
-            this.close()
+            if (this.order_info.customer && this.order_info.lockType && Number(this.order_info.quantity) && this.order_info.deliveryDate) {
+                console.log(this.order_info)
+                // await fb.addOrder(this.order_info)
+                // await this.refreshOrders()
+                this.close()
+            }
         },
 
         showConfirmation(order) {

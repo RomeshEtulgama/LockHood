@@ -68,9 +68,18 @@
             dense>
             <!-- Required Raw Item -->
             <template v-slot:[`item.required_raw_items`]="{ item }">
-                <div v-for="(rItem, i) in item.required_raw_items" :key="i">{{
-                    rItem.rawItem + " x " + rItem.quantity
-                }}</div>
+                <v-list dense class="py-0">
+                    <ul>
+                        <li v-for="(rItem, i) in item.required_raw_items" :key="i">
+                            <span>
+                                {{ rItem.rawItem }}
+                            </span>
+                            <span>
+                                × {{ rItem.quantity }}
+                            </span>
+                        </li>
+                    </ul>
+                </v-list>
             </template>
             <!-- Actions -->
             <template v-slot:[`item.actions`]="{ item }">
