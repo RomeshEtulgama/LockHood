@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card :loading="loading">
         <v-card-title>
             Current Orders
             <v-spacer></v-spacer>
@@ -78,8 +78,8 @@
                 <v-icon>mdi-refresh</v-icon>
             </v-btn>
         </v-card-title>
-        <v-data-table :headers="headers" :items="orders" :items-per-page="10" :search="search" class="elevation-1" dense
-            :loading="loading">
+        <v-data-table :headers="headers" :items="orders" :items-per-page="10" :search="search" class="elevation-1"
+            dense>
             <!-- Customer -->
             <template v-slot:[`item.customer`]="{ item }">
                 <v-text-field v-model="item.customer" dense solo hide-details

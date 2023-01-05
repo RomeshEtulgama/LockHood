@@ -274,7 +274,7 @@ async function updateFactoryItemQuantity(itemId, quantity) {
     const docRef = doc(factoryItemsCollection, itemId)
 
     await updateDoc(docRef, {
-        quantity: quantity
+        quantity: Number(quantity)
     });
 }
 

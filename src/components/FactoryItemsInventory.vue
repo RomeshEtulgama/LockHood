@@ -125,7 +125,7 @@ export default {
 
             product_info: {
                 productName: "",
-                required_raw_items: [{ rawItem: "", quantity: "" }]
+                required_raw_items: [{ rawItem: "", quantity: 0 }]
             },
 
             dialog: false,
@@ -180,7 +180,7 @@ export default {
         },
 
         addRequiredItem() {
-            this.product_info.required_raw_items.push({ rawItem: "", quantity: "" })
+            this.product_info.required_raw_items.push({ rawItem: "", quantity: 0 })
         },
 
         async editProduct(item) {

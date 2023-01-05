@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card :loading="loading">
         <v-card-title>
             Pending Orders
             <v-spacer></v-spacer>
@@ -10,6 +10,7 @@
                 <v-icon>mdi-refresh</v-icon>
             </v-btn>
         </v-card-title>
+
         <v-data-table :headers="headers" :items="pendingOrders" :items-per-page="10" :search="search"
             class="elevation-1" dense>
             <!-- Lock Type -->
@@ -25,38 +26,55 @@
         </v-data-table>
 
         <v-dialog v-model="orderAcceptanceDialog" max-width="600">
-            <v-card>
-                <v-card-title class="headline">Accept Order - {{
-                    acceptingOrder? acceptingOrder.lockType
-                : ""}}</v-card-title>
+            <v-card v-if="acceptingOrder.product">
+                <v-card-title>{{ acceptingOrder.customer }}</v-card-title>
+                <v-card-subtitle>Delivery Date : {{ acceptingOrder.deliveryDate }}</v-card-subtitle>
                 <v-card-text>
-                    <v-row v-if="acceptingOrder">
-                        <v-col>
-                            <v-textarea rows="1" outlined label="Description" :value="acceptingOrder.description"
-                                readonly auto-grow></v-textarea>
+                    <v-row>
+                        <v-col cols="12" lg="8" md="8" sm="8">
+                            <v-text-field label="Product Name" :value="acceptingOrder.product.productName" readonly
+                                hide-details />
+                        </v-col>
+                        <v-col cols="12" lg="4" md="4" sm="4">
+                            <v-text-field label="Quantity" :value="acceptingOrder.quantity" readonly hide-details />
                         </v-col>
                     </v-row>
                     <v-row>
-                        <v-col>
-                            <v-select v-model="kanBan_info.assigned_employees" :items="employees"
-                                item-text="displayName" item-value="uid" label="Assigned Employees" dense
-                                multiple></v-select>
-                        </v-col>
+                        <v-list subheader two-line>
+                            <v-subheader>Required Raw Items List</v-subheader>
+
+                            <v-list-item v-for="rawItem in acceptingOrder.product.required_raw_items" :key="rawItem.id">
+                                <v-list-item-content>
+                                    <v-list-item-title v-text="rawItem.rawItem"></v-list-item-title>
+
+                                    <v-list-item-subtitle
+                                        v-text="'Each lock needs ' + rawItem.quantity + ' ' + rawItem.rawItem"></v-list-item-subtitle>
+                                </v-list-item-content>
+
+                                <v-list-item-action>
+                                    <span
+                                        v-if="Number(rawItem.available_quantity) >= Number(rawItem.quantity) * Number(acceptingOrder.quantity)"
+                                        class="text-h6">{{
+                                            Number(rawItem.quantity) * Number(acceptingOrder.quantity)
+                                        }}</span>
+                                    <v-tooltip v-else bottom color="error">
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <span v-bind="attrs" v-on="on" class="error--text text-h6">{{
+                                                Number(rawItem.quantity) * Number(acceptingOrder.quantity)
+                                            }}</span>
+                                        </template>
+                                        <span>Only {{ rawItem.available_quantity + ' ' + rawItem.rawItem }} available in
+                                            stock!</span>
+                                    </v-tooltip>
+
+                                </v-list-item-action>
+                            </v-list-item>
+
+                            <v-divider inset></v-divider>
+
+                        </v-list>
                     </v-row>
-                    <v-row v-for="(item, i) in kanBan_info.required_raw_items" :key="i">
-                        <v-col cols="12" lg="8" md="6" sm="12">
-                            <v-select v-model="item.item" :items="rawItems" item-text="itemName" item-value="id"
-                                label="Raw Item" dense></v-select>
-                        </v-col>
-                        <v-col cols="12" lg="4" md="6" sm="12">
-                            <v-text-field v-model="item.quantity" type="number" label="Quantity" dense></v-text-field>
-                        </v-col>
-                    </v-row>
-                    <v-row>
-                        <v-col>
-                            <v-btn @click="addRequiredItem()">Add Item</v-btn>
-                        </v-col>
-                    </v-row>
+
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
@@ -74,27 +92,29 @@ import * as fb from '@/firebase'
 export default {
     data() {
         return {
+            loading: false,
             headers: [
                 { text: 'Order ID', value: 'id' },
                 { text: 'Lock Type', value: 'lockType' },
                 { text: 'Quantity', value: 'quantity' },
+                { text: 'Delivery Date', value: 'deliveryDate' },
                 { text: "Actions", value: "actions", align: "right", sortable: false },
             ],
             pendingOrders: [],
             search: "",
 
-            kanBan_info: {
-                assigned_employees: [],
-                required_raw_items: [{ item: "", quantity: "" }],
-            },
-
-            empty_kanBan_info: {
-                assigned_employees: [],
-                required_raw_items: [{ item: "", quantity: "" }],
-            },
-
             orderAcceptanceDialog: false,
-            acceptingOrder: null,
+            acceptingOrder: {
+                customer: "",
+                deliveryDate: "",
+                quantity: 0,
+                product: {
+                    productName: "",
+                    required_raw_items: []
+                }
+            },
+
+            order_info: null,
 
             dialog: false,
             valid: true,
@@ -102,15 +122,18 @@ export default {
             employees: [],
             rawItems: [],
             factoryItems: [],
+
         }
     },
 
     methods: {
         async refreshPendingOrders() {
+            this.loading = true;
             this.pendingOrders = await fb.getPendingOrders()
             this.employees = await fb.getEmployees()
             this.rawItems = await fb.getRawItems()
             this.factoryItems = await fb.getFactoryItems()
+            this.loading = false;
         },
 
         close() {
@@ -118,15 +141,31 @@ export default {
         },
 
         async acceptOrder(item) {
-            item.kanBan_info = this.kanBan_info
-            await fb.acceptOrder(item)
-            this.kanBan_info = this.empty_kanBan_info
+            this.loading = true;
+            // await fb.acceptOrder(item)
+            if (this.validateOrder(item))
+                console.log(item)
             this.close()
+            this.loading = false;
         },
 
-        showConfirmation(order) {
+        validateOrder(item) {
+            console.log(item)
+            return false
+        },
+
+        async showConfirmation(order) {
             this.acceptingOrder = order
+            this.acceptingOrder.product = await fb.getFactoryItem(this.acceptingOrder.lockType)
+            await Promise.all(
+                this.acceptingOrder.product.required_raw_items.map(async (item) => {
+                    var raw_Item = await fb.getRawItem(item.rawItem);
+                    item.rawItem = raw_Item.itemName;
+                    item.available_quantity = raw_Item.quantity;
+                })
+            );
             this.orderAcceptanceDialog = true
+            console.log(this.acceptingOrder)
         },
 
         addRequiredItem() {
