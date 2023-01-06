@@ -205,7 +205,6 @@ export default {
         async acceptOrder(order) {
             this.loading = true;
             this.acceptingOrder.assignedEmployees = this.assigningEmployees.filter(obj => obj.uid && Number(obj.quantity) !== 0)
-
             if (await this.validateOrder(order)) {
                 await fb.acceptOrder(order)
                 this.close()

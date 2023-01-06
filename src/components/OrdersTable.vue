@@ -99,13 +99,13 @@
             </template>
             <!-- Delivery Date -->
             <template v-slot:[`item.deliveryDate`]="{ item }">
-                <v-menu v-if="!item.accepted" v-model="editDateMenu" :close-on-content-click="false" :nudge-right="40"
-                    transition="scale-transition" offset-y min-width="auto">
+                <v-menu v-if="!item.accepted" v-model="editDateMenu.id" :close-on-content-click="false"
+                    :nudge-right="40" transition="scale-transition" offset-y min-width="auto">
                     <template v-slot:activator="{ on, attrs }">
                         <v-text-field v-model="item.deliveryDate" label="Delivery Date" prepend-icon="mdi-calendar"
                             readonly v-bind="attrs" v-on="on" hide-details></v-text-field>
                     </template>
-                    <v-date-picker v-model="item.deliveryDate" @input="editDateMenu = false"
+                    <v-date-picker v-model="item.deliveryDate" @input="editDateMenu.id = false"
                         @change="updateDeliveryDate(item)"></v-date-picker>
                 </v-menu>
                 <span v-else>{{ item.deliveryDate }}</span>

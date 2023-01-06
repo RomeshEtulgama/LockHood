@@ -29,13 +29,25 @@
                                             :rules="[() => !!item_info.itemName || 'Item Name is required']"
                                             required></v-text-field>
                                     </v-col>
+                                </v-row>
+                                <v-row>
+
                                     <!-- Quantity -->
-                                    <v-col cols="12" sm="6" md="4" lg="4">
+                                    <v-col cols="12" sm="6" md="6" lg="6">
                                         <v-text-field type="number" v-model="item_info.quantity" label="Quantity"
                                             :rules="[
                                                 () =>
                                                     !!item_info.quantity ||
                                                     'Item Quantity is required',
+                                            ]" required></v-text-field>
+                                    </v-col>
+                                    <!-- Alert Quantity -->
+                                    <v-col cols="12" sm="6" md="6" lg="6">
+                                        <v-text-field type="number" v-model="item_info.alertQuantity"
+                                            label="Alert Quantity" :rules="[
+                                                () =>
+                                                    !!item_info.quantity ||
+                                                    'Alert Quantity is required to send alerts when low stock',
                                             ]" required></v-text-field>
                                     </v-col>
                                 </v-row>
@@ -64,6 +76,11 @@
                 <v-text-field type="number" class="w-100" v-model="item.quantity" dense hide-details solo
                     @change="updateQuantity(item)"></v-text-field>
             </template>
+            <!-- Alert Quantity -->
+            <template v-slot:[`item.alertQuantity`]="{ item }">
+                <v-text-field type="number" class="w-100" v-model="item.alertQuantity" dense hide-details solo
+                    @change="updateAlertQuantity(item)"></v-text-field>
+            </template>
             <!-- Actions -->
             <template v-slot:[`item.actions`]="{ item }">
                 <v-btn class="error" x-small @click="showConfirmation(item)">Delete</v-btn>
@@ -90,15 +107,18 @@ export default {
     data() {
         return {
             loading: true,
+
             headers: [
                 { text: 'Item Name', value: 'itemName' },
                 { text: 'Quantity', value: 'quantity' },
+                { text: 'Alert Quantity', value: 'alertQuantity' },
                 { text: "Actions", value: "actions", align: "right", sortable: false },
             ],
+
             items: [],
             search: "",
 
-            item_info: { itemName: "", quantity: "" },
+            item_info: { itemName: "", quantity: "", alertQuantity: "" },
             dialog: false,
             valid: true,
 
@@ -143,6 +163,12 @@ export default {
         async updateQuantity(item) {
             this.loading = true
             await fb.updateRawItemQuantity(item.id, item.quantity)
+            this.loading = false
+        },
+
+        async updateAlertQuantity(item) {
+            this.loading = true
+            await fb.updateRawItemAlertQuantity(item.id, item.alertQuantity)
             this.loading = false
         },
 

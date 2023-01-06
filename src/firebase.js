@@ -199,8 +199,7 @@ async function getNumberOfAssignedOrders(userId) {
                 count++
             });
         } else {
-            console.log("User not available");
-            return null
+            count = 0
         }
     }).catch((error) => {
         console.error(error);
@@ -250,6 +249,14 @@ async function updateRawItemQuantity(itemId, quantity) {
 
     await updateDoc(docRef, {
         quantity: quantity
+    });
+}
+
+async function updateRawItemAlertQuantity(itemId, alertQuantity) {
+    const docRef = doc(rawItemsCollection, itemId)
+
+    await updateDoc(docRef, {
+        alertQuantity: alertQuantity
     });
 }
 
@@ -342,6 +349,13 @@ async function addOrder(order) {
 
 /*  removes a document with the specified ID from the "orders" collection in a database. */
 async function deleteOrder(orderId) {
+    const orderRef = doc(ordersCollection, orderId)
+
+    const order = await (await getDoc(orderRef)).data()
+
+    if (order.accepted)
+        await this.unacceptOrder(order)
+
     await removeDoc(ordersCollection, orderId)
 }
 
@@ -415,7 +429,16 @@ async function getAcceptedOrders() {
 async function acceptOrder(item) {
     const orderRef = doc(ordersCollection, item.id)
 
+    const order = await (await getDoc(orderRef)).data()
+    const product = await this.getFactoryItem(order.lockType)
+
     const batch = writeBatch(db);
+
+    product.required_raw_items.forEach(rawItem => {
+        var reducingQuantity = increment(-1 * rawItem.quantity * order.quantity)
+        const rawItemRef = doc(rawItemsCollection, rawItem.rawItem)
+        batch.update(rawItemRef, { quantity: reducingQuantity });
+    })
 
     batch.update(orderRef, {
         accepted: true,
@@ -430,19 +453,23 @@ async function acceptOrder(item) {
     })
 
     await batch.commit()
-    // item.kanBan_info.assigned_employees.forEach(async employee => {
-    //     const userRef = ref(rtd, 'users/' + employee)
-    //     await update(userRef, {
-    //         'assigned_orders': item
-    //     })
-    // })
 
 }
 
 async function unacceptOrder(item) {
     const orderRef = doc(ordersCollection, item.id)
 
+    const order = await (await getDoc(orderRef)).data()
+
+    const product = await this.getFactoryItem(order.lockType)
+
     const batch = writeBatch(db);
+
+    product.required_raw_items.forEach(rawItem => {
+        var reducingQuantity = increment(rawItem.quantity * order.quantity)
+        const rawItemRef = doc(rawItemsCollection, rawItem.rawItem)
+        batch.update(rawItemRef, { quantity: reducingQuantity });
+    })
 
     batch.update(orderRef, {
         accepted: false,
@@ -529,5 +556,6 @@ export {
     getUserById,
     unacceptOrder,
     updateOrder,
-    getNumberOfAssignedOrders
+    getNumberOfAssignedOrders,
+    updateRawItemAlertQuantity
 }

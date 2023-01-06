@@ -120,7 +120,7 @@
                                                 <v-select v-model="employee.uid" :items="employees" item-value="uid"
                                                     item-text="displayName" hide-details></v-select>
                                                 <v-list-item-subtitle
-                                                    v-text="'Assigned in ' + Math.floor(Math.random() * 10) + ' orders.'"></v-list-item-subtitle>
+                                                    v-text="'Assigned in ' + employee.orderCount + ' orders.'"></v-list-item-subtitle>
                                             </v-list-item-content>
 
                                             <v-list-item-action>
@@ -215,10 +215,10 @@ export default {
             this.employees = await fb.getEmployees()
             this.rawItems = await fb.getRawItems()
             this.factoryItems = await fb.getFactoryItems()
-            this.employees.forEach(async employee => {
+            const orderCountPromises = this.employees.map(async employee => {
                 employee.orderCount = await fb.getNumberOfAssignedOrders(employee.uid)
-                console.log(employee.uid, employee.orderCount)
             })
+            await Promise.all(orderCountPromises)
             this.loading = false;
         },
 
@@ -286,10 +286,6 @@ export default {
             this.assigningEmployees.push({ uid: null, quantity: remainingQuantity })
             this.acceptingOrder.assignedEmployees = this.assigningEmployees
         },
-
-        async getOrderCount(userId) {
-            await fb.getNumberOfAssignedOrders(userId)
-        }
     },
 
     async mounted() {
