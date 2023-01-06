@@ -93,13 +93,10 @@
                             <v-card>
                                 <v-card-title>Assign Employees</v-card-title>
                                 <v-card-text>
-                                    <!-- <span v-for="(employee, i) in assigningEmployees" :key="i">{{
-                                        employee
-                                    }}</span> -->
                                     <v-list subheader two-line>
-                                        <v-list-item v-for="(person, i) in assigningEmployees" :key="i">
+                                        <v-list-item v-for="(employee, i) in assigningEmployees" :key="i">
                                             <v-list-item-content>
-                                                <v-select v-model="person.employee" :items="employees" item-value="uid"
+                                                <v-select v-model="employee.uid" :items="employees" item-value="uid"
                                                     item-text="displayName" hide-details></v-select>
                                                 <v-list-item-subtitle
                                                     v-text="'Assigned in ' + Math.floor(Math.random() * 10) + ' orders.'"></v-list-item-subtitle>
@@ -107,7 +104,7 @@
 
                                             <v-list-item-action>
                                                 <v-text-field type="number" label="Assigned Quantity"
-                                                    v-model="person.quantity" :max="acceptingOrder.quantity" :min="0"
+                                                    v-model="employee.quantity" :max="acceptingOrder.quantity" :min="0"
                                                     style="min-width: 200px" hide-details single-line></v-text-field>
                                             </v-list-item-action>
                                         </v-list-item>
@@ -207,11 +204,10 @@ export default {
 
         async acceptOrder(order) {
             this.loading = true;
-            this.acceptingOrder.assignedEmployees = this.assigningEmployees.filter(obj => obj.employee && obj.quantity !== 0)
+            this.acceptingOrder.assignedEmployees = this.assigningEmployees.filter(obj => obj.uid && Number(obj.quantity) !== 0)
 
             if (await this.validateOrder(order)) {
                 await fb.acceptOrder(order)
-                // console.log(order)
                 this.close()
             } else {
                 this.error = "Not enough raw items in stock!"
@@ -262,7 +258,7 @@ export default {
             var remainingQuantity = this.acceptingOrder.quantity - this.assigningEmployees.reduce((acc, curr) => acc + curr['quantity'], 0);
             if (remainingQuantity < 0)
                 remainingQuantity = 0;
-            this.assigningEmployees.push({ employee: "", quantity: remainingQuantity })
+            this.assigningEmployees.push({ uid: null, quantity: remainingQuantity })
             this.acceptingOrder.assignedEmployees = this.assigningEmployees
         }
     },

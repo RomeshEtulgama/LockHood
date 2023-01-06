@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, increment, writeBatch, doc, getDoc, collection, getDocs, updateDoc } from "firebase/firestore";
-import { getDatabase, ref, set, get, orderByChild, equalTo, query, update } from "firebase/database";
+import { getDatabase, ref, set, get, orderByChild, equalTo, query, update, remove } from "firebase/database";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDIaLpoxskuwPQGEQf9gQ6LMvZjyySk4Ng",
@@ -147,7 +147,9 @@ async function getUserById(userId) {
     const userRef = ref(rtd, 'users/' + userId)
     return await get(userRef).then((snapshot) => {
         if (snapshot.exists()) {
-            return snapshot.val();
+            var user = snapshot.val();
+            user.uid = userId;
+            return user;
         } else {
             console.log("User not available");
             return null
@@ -182,9 +184,29 @@ async function getEmployees() {
             user.uid = childSnapshot.key
             if (user.class == 'Employee')
                 employees.push(user);
+
         });
     })
     return employees;
+}
+
+async function getNumberOfAssignedOrders(userId) {
+    var count = 0
+    const userRef = ref(rtd, 'users/' + userId + '/assignedOrders')
+    await get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            snapshot.forEach(() => {
+                count++
+            });
+        } else {
+            console.log("User not available");
+            return null
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+
+    return count;
 }
 
 //functions/rawItems ---------------------------------------------------------------------------------------------------!
@@ -379,8 +401,9 @@ async function getAcceptedOrders() {
         if (acceptedOrder.accepted) {
             acceptedOrder.id = doc.id
             acceptedOrder.assignedEmployees.forEach(async (assignedEmployee) => {
-                var user = await getUserById(assignedEmployee.employee)
+                var user = await getUserById(assignedEmployee.uid)
                 assignedEmployee.employee = user.displayName
+                assignedEmployee.uid = user.uid
                 assignedEmployee.quantity = Number(assignedEmployee.quantity)
             })
             acceptedOrders.push(acceptedOrder)
@@ -400,7 +423,53 @@ async function acceptOrder(item) {
     });
 
     item.assignedEmployees.forEach(assignedEmployee => {
-        const employeeRef = ref(rtd, 'users/' + assignedEmployee.employee + '/assignedOrders/' + item.id)
+        const employeeRef = ref(rtd, 'users/' + assignedEmployee.uid + '/assignedOrders/' + item.id)
+        update(employeeRef, {
+            quantity: item.quantity
+        })
+    })
+
+    await batch.commit()
+    // item.kanBan_info.assigned_employees.forEach(async employee => {
+    //     const userRef = ref(rtd, 'users/' + employee)
+    //     await update(userRef, {
+    //         'assigned_orders': item
+    //     })
+    // })
+
+}
+
+async function unacceptOrder(item) {
+    const orderRef = doc(ordersCollection, item.id)
+
+    const batch = writeBatch(db);
+
+    batch.update(orderRef, {
+        accepted: false,
+        assignedEmployees: ""
+    });
+
+
+    item.assignedEmployees.forEach(assignedEmployee => {
+        const employeeRef = ref(rtd, 'users/' + assignedEmployee.uid + '/assignedOrders/' + item.id)
+        remove(employeeRef)
+    })
+
+    await batch.commit()
+
+}
+
+async function updateOrder(item) {
+    const orderRef = doc(ordersCollection, item.id)
+
+    const batch = writeBatch(db);
+
+    batch.update(orderRef, {
+        assignedEmployees: item.assignedEmployees
+    });
+
+    item.assignedEmployees.forEach(assignedEmployee => {
+        const employeeRef = ref(rtd, 'users/' + assignedEmployee.uid + '/assignedOrders/' + item.id)
         update(employeeRef, {
             quantity: item.quantity
         })
@@ -457,5 +526,8 @@ export {
     updateOrderLockType,
     updateOrderDeliveryDate,
     getAcceptedOrders,
-    getUserById
+    getUserById,
+    unacceptOrder,
+    updateOrder,
+    getNumberOfAssignedOrders
 }
