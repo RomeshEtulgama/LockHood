@@ -512,6 +512,27 @@ async function updateOrder(item) {
 
 }
 
+async function updateFinishedQuantity(item) {
+    const orderRef = doc(ordersCollection, item.id)
+
+    var finishedQuantity = item.assignedEmployees.reduce((total, employee) => total + (Number(employee.finishedQuantity) ? Number(employee.finishedQuantity) : 0), 0);
+
+    const batch = writeBatch(db);
+
+    batch.update(orderRef, {
+        finishedQuantity: Number(finishedQuantity)
+    });
+
+    item.assignedEmployees.forEach(assignedEmployee => {
+        const employeeRef = ref(rtd, 'users/' + assignedEmployee.uid + '/assignedOrders/' + item.id)
+        update(employeeRef, {
+            finishedQuantity: Number(assignedEmployee.finishedQuantity)
+        })
+    })
+
+    await batch.commit()
+}
+
 
 
 export {
@@ -557,5 +578,6 @@ export {
     unacceptOrder,
     updateOrder,
     getNumberOfAssignedOrders,
-    updateRawItemAlertQuantity
+    updateRawItemAlertQuantity,
+    updateFinishedQuantity
 }

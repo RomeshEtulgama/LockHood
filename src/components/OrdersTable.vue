@@ -122,8 +122,12 @@
                 <v-icon v-if="item.accepted" color="success">mdi-check</v-icon>
             </template>
             <!-- Progress -->
-            <template v-slot:[`item.progress`]="{ item }">
-                <span>{{ item.progress ? Number(item.progress) : "0%" }}</span>
+            <template v-slot:[`item.finishedQuantity`]="{ item }">
+                {{
+                    item.accepted ? Math.floor(item.finishedQuantity / item.quantity * 100) + '% (' + item.finishedQuantity
+                        + '/' +
+                        item.quantity + ')' : " - "
+                }}
             </template>
             <!-- Actions -->
             <template v-slot:[`item.actions`]="{ item }">
@@ -160,7 +164,7 @@ export default {
                 { text: 'Quantity', value: 'quantity' },
                 { text: 'Delivery Date', value: 'deliveryDate' },
                 { text: 'Accepted', value: 'accepted' },
-                { text: 'Progress', value: 'progress' },
+                { text: 'Progress', value: 'finishedQuantity' },
                 { text: "Actions", value: "actions", align: "right", sortable: false },
             ],
 
