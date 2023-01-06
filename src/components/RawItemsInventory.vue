@@ -34,8 +34,8 @@
 
                                     <!-- Quantity -->
                                     <v-col cols="12" sm="6" md="6" lg="6">
-                                        <v-text-field type="number" v-model="item_info.quantity" label="Quantity"
-                                            :rules="[
+                                        <v-text-field type="number" :min="0" v-model="item_info.quantity"
+                                            label="Quantity" :rules="[
                                                 () =>
                                                     !!item_info.quantity ||
                                                     'Item Quantity is required',
@@ -43,7 +43,7 @@
                                     </v-col>
                                     <!-- Alert Quantity -->
                                     <v-col cols="12" sm="6" md="6" lg="6">
-                                        <v-text-field type="number" v-model="item_info.alertQuantity"
+                                        <v-text-field type="number" :min="0" v-model="item_info.alertQuantity"
                                             label="Alert Quantity" :rules="[
                                                 () =>
                                                     !!item_info.quantity ||
@@ -73,12 +73,12 @@
             </template>
             <!-- Quantity -->
             <template v-slot:[`item.quantity`]="{ item }">
-                <v-text-field type="number" class="w-100" v-model="item.quantity" dense hide-details solo
+                <v-text-field type="number" :min="0" class="w-100" v-model="item.quantity" dense hide-details solo
                     @change="updateQuantity(item)"></v-text-field>
             </template>
             <!-- Alert Quantity -->
             <template v-slot:[`item.alertQuantity`]="{ item }">
-                <v-text-field type="number" class="w-100" v-model="item.alertQuantity" dense hide-details solo
+                <v-text-field type="number" :min="0" class="w-100" v-model="item.alertQuantity" dense hide-details solo
                     @change="updateAlertQuantity(item)"></v-text-field>
             </template>
             <!-- Actions -->
