@@ -143,6 +143,20 @@ async function approveUser(userId) {
     })
 }
 
+async function getUserById(userId) {
+    const userRef = ref(rtd, 'users/' + userId)
+    return await get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            return snapshot.val();
+        } else {
+            console.log("User not available");
+            return null
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+}
+
 /* disapproves a user with the given userId by updating the 'approved' field in the user's document in the 'users' collection to false. It creates a reference to the user's document and uses the update() function to set the 'approved' field to false. */
 async function disapproveUser(userId) {
     const userRef = ref(rtd, 'users/' + userId)
@@ -356,13 +370,43 @@ async function getPendingOrders() {
     return pendingOrders
 }
 
-async function acceptOrder(item) {
-    const docRef = doc(ordersCollection, item.id)
+async function getAcceptedOrders() {
+    var acceptedOrders = []
+    const querySnapshot = await getDocs(ordersCollection);
 
-    await updateDoc(docRef, {
-        accepted: true
+    await querySnapshot.forEach((doc) => {
+        var acceptedOrder = doc.data()
+        if (acceptedOrder.accepted) {
+            acceptedOrder.id = doc.id
+            acceptedOrder.assignedEmployees.forEach(async (assignedEmployee) => {
+                var user = await getUserById(assignedEmployee.employee)
+                assignedEmployee.employee = user.displayName
+                assignedEmployee.quantity = Number(assignedEmployee.quantity)
+            })
+            acceptedOrders.push(acceptedOrder)
+        }
+    });
+    return acceptedOrders
+}
+
+async function acceptOrder(item) {
+    const orderRef = doc(ordersCollection, item.id)
+
+    const batch = writeBatch(db);
+
+    batch.update(orderRef, {
+        accepted: true,
+        assignedEmployees: item.assignedEmployees
     });
 
+    item.assignedEmployees.forEach(assignedEmployee => {
+        const employeeRef = ref(rtd, 'users/' + assignedEmployee.employee + '/assignedOrders/' + item.id)
+        update(employeeRef, {
+            quantity: item.quantity
+        })
+    })
+
+    await batch.commit()
     // item.kanBan_info.assigned_employees.forEach(async employee => {
     //     const userRef = ref(rtd, 'users/' + employee)
     //     await update(userRef, {
@@ -412,4 +456,6 @@ export {
     updateOrderCustomer,
     updateOrderLockType,
     updateOrderDeliveryDate,
+    getAcceptedOrders,
+    getUserById
 }

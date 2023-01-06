@@ -47,6 +47,8 @@ export default {
         }
     },
 
+    computed: {},
+
     methods: {
         async approveUser(user) {
             this.loading = true

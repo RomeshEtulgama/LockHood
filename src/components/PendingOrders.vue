@@ -107,7 +107,7 @@
 
                                             <v-list-item-action>
                                                 <v-text-field type="number" label="Assigned Quantity"
-                                                    v-model="person.quantity" :max="remainingQuantity" :min="0"
+                                                    v-model="person.quantity" :max="acceptingOrder.quantity" :min="0"
                                                     style="min-width: 200px" hide-details single-line></v-text-field>
                                             </v-list-item-action>
                                         </v-list-item>
@@ -130,6 +130,9 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <v-snackbar color="red" v-model="snackbar" :timeout="timeout">
+            {{ error }}
+        </v-snackbar>
     </v-card>
 </template>
 
@@ -141,7 +144,6 @@ export default {
         return {
             loading: false,
             headers: [
-                { text: 'Order ID', value: 'id' },
                 { text: 'Customer', value: 'customer' },
                 { text: 'Lock Type', value: 'lockType' },
                 { text: 'Quantity', value: 'quantity' },
@@ -175,12 +177,17 @@ export default {
 
             assigningEmployees: [],
 
+            error: null,
+            timeout: 3000,
+            snackbar: false,
+
         }
     },
 
-    computed: {
-        remainingQuantity() {
-            return this.acceptingOrder.quantity
+    watch: {
+        orderAcceptanceDialog(e) {
+            if (e == false)
+                this.assigningEmployees = []
         }
     },
 
@@ -200,10 +207,18 @@ export default {
 
         async acceptOrder(order) {
             this.loading = true;
+            this.acceptingOrder.assignedEmployees = this.assigningEmployees.filter(obj => obj.employee && obj.quantity !== 0)
+
             if (await this.validateOrder(order)) {
                 await fb.acceptOrder(order)
+                // console.log(order)
+                this.close()
+            } else {
+                this.error = "Not enough raw items in stock!"
+                this.snackbar = true;
             }
-            this.close()
+
+            this.refreshPendingOrders()
             this.loading = false;
         },
 
@@ -232,8 +247,6 @@ export default {
                     item.available_quantity = raw_Item.quantity;
                 })
             );
-            this.acceptingOrder.assignedEmployees = [{ employee: null, quantity: null }]
-            console.log(this.acceptingOrder)
         },
 
         addRequiredItem() {
@@ -246,7 +259,10 @@ export default {
         },
 
         addEmployeeToAcceptingOrder() {
-            this.assigningEmployees.push({ employee: "", quantity: 0 })
+            var remainingQuantity = this.acceptingOrder.quantity - this.assigningEmployees.reduce((acc, curr) => acc + curr['quantity'], 0);
+            if (remainingQuantity < 0)
+                remainingQuantity = 0;
+            this.assigningEmployees.push({ employee: "", quantity: remainingQuantity })
             this.acceptingOrder.assignedEmployees = this.assigningEmployees
         }
     },
