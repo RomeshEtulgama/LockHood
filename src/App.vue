@@ -99,6 +99,7 @@ export default {
       { title: "Inventory", icon: "mdi-view-list", route: "/inventory" },
       { title: "Orders", icon: "mdi-book", route: "/orders" },
       { title: "KanBan", icon: "mdi-card", route: "/kanban" },
+      { title: "Reports", icon: "mdi-file-document", route: "/reports" },
     ],
   }),
 

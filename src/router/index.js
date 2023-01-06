@@ -49,6 +49,18 @@ const routes = [
         return import('../views/Error.vue')
     }
   },
+
+  {
+    path: '/reports',
+    name: 'reports',
+    component: async () => {
+      const user = await fb.getUser();
+      if (user.class)
+        return import('../views/Reports.vue')
+      else
+        return import('../views/Error.vue')
+    }
+  },
 ]
 
 const router = new VueRouter({
