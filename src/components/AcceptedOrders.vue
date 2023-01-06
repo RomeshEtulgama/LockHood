@@ -118,9 +118,9 @@
                                         <v-list-item v-for="(employee, i) in assigningEmployees" :key="i">
                                             <v-list-item-content>
                                                 <v-select v-model="employee.uid" :items="employees" item-value="uid"
-                                                    item-text="displayName" hide-details></v-select>
-                                                <v-list-item-subtitle
-                                                    v-text="'Assigned in ' + employee.orderCount + ' orders.'"></v-list-item-subtitle>
+                                                    item-text="displayName"></v-select>
+                                                <!-- <v-list-item-subtitle
+                                                    v-text="'Assigned in ' + employee.orderCount + ' orders.'"></v-list-item-subtitle> -->
                                             </v-list-item-content>
 
                                             <v-list-item-action>

@@ -61,7 +61,14 @@
                                 </v-row>
                                 <v-row v-if="order_info.lockType && order_info.quantity">
                                     <v-col>
-                                        <span>{{ Math.floor(Math.random() * 20) + 1 }} </span> &nbsp; days to complete.
+                                        <span>This order will take {{ orderCompletionTime }} to
+                                            complete.</span>
+                                    </v-col>
+                                </v-row>
+                                <v-row v-else-if="order_info.lockType">
+                                    <v-col>
+                                        <span>
+                                            This product needs {{ timeToFinish }} hours to finish.</span>
                                     </v-col>
                                 </v-row>
                             </v-form>
@@ -179,6 +186,29 @@ export default {
 
             confirmationDialog: false,
             deletingOrder: null
+        }
+    },
+
+    computed: {
+        timeToFinish() {
+            const product = this.factoryItems.find(item => item.id === this.order_info.lockType);
+
+            return product.timeRequirement;
+
+        },
+
+        orderCompletionTime() {
+            const product = this.factoryItems.find(item => item.id === this.order_info.lockType);
+            const timeRequirement = product.timeRequirement;
+            var totalTime = 0;
+            if (Number(this.order_info.quantity) > 0) {
+                totalTime = timeRequirement * this.order_info.quantity
+            }
+            if (totalTime > 24) {
+                return totalTime / 24 + ' days'
+            } else {
+                return totalTime + ' hours'
+            }
         }
     },
 

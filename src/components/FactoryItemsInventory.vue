@@ -8,7 +8,7 @@
             <v-spacer></v-spacer>
 
             <!-- Add Product -->
-            <v-dialog v-model="dialog" max-width="400px" persistent>
+            <v-dialog v-model="dialog" max-width="500px" persistent>
                 <template v-slot:activator="{ on, attrs }">
                     <!-- Add New Item -->
                     <v-btn color="success" dark v-bind="attrs" v-on="on" class="mx-2" small>
@@ -26,10 +26,16 @@
                             <v-form ref="form" v-model="valid" lazy-validation>
                                 <v-row>
                                     <!-- Name -->
-                                    <v-col cols="12" sm="6" md="8" lg="8">
+                                    <v-col cols="12" sm="6" md="6" lg="6">
                                         <v-text-field v-model="product_info.productName" label="Product Name"
                                             :rules="[() => !!product_info.productName || 'Product Name is required',]"
                                             required></v-text-field>
+                                    </v-col>
+                                    <!-- Hours to finish -->
+                                    <v-col cols="12" sm="6" md="6" lg="6">
+                                        <v-text-field v-model="product_info.timeRequirement" label="Hours per item"
+                                            :rules="[() => !!product_info.timeRequirement || 'Product Name is required',]"
+                                            required suffix="hours"></v-text-field>
                                     </v-col>
                                 </v-row>
                                 <v-row v-for="(item, i) in product_info.required_raw_items" :key="i">
@@ -81,6 +87,10 @@
                     </ul>
                 </v-list>
             </template>
+            <!-- Time Requirement -->
+            <template v-slot:[`item.timeRequirement`]="{ item }">
+                {{ item.timeRequirement }} hours
+            </template>
             <!-- Actions -->
             <template v-slot:[`item.actions`]="{ item }">
                 <v-icon small class="mr-2" @click="editProduct(item)">
@@ -117,6 +127,7 @@ export default {
             headers: [
                 { text: 'Product Name', value: 'productName' },
                 { text: 'Required Raw Items', value: 'required_raw_items' },
+                { text: 'Time requirement', value: 'timeRequirement' },
                 { text: "Actions", value: "actions", align: "right", sortable: false },
             ],
             products: [],
@@ -125,7 +136,8 @@ export default {
 
             product_info: {
                 productName: "",
-                required_raw_items: [{ rawItem: "", quantity: 0 }]
+                required_raw_items: [{ rawItem: "", quantity: 0 }],
+                timeRequirement: null,
             },
 
             dialog: false,
