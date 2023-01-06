@@ -124,9 +124,9 @@
             <!-- Progress -->
             <template v-slot:[`item.finishedQuantity`]="{ item }">
                 {{
-                    item.accepted ? Math.floor(item.finishedQuantity / item.quantity * 100) + '% (' + item.finishedQuantity
-                        + '/' +
-                        item.quantity + ')' : " - "
+                    item.finishedQuantity ? Math.floor(item.finishedQuantity / item.quantity * 100) + '% (' +
+                        item.finishedQuantity + '/' +
+                        item.quantity + ')' : '-'
                 }}
             </template>
             <!-- Actions -->
