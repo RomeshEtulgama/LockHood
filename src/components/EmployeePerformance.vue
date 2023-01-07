@@ -79,9 +79,11 @@ export default {
         },
 
         getLockType(id) {
-            for (const order of this.orders) {
-                if (order.id === id) {
-                    return this.getProduct(order.lockType);
+            if (this.orders) {
+                for (const order of this.orders) {
+                    if (order.id === id) {
+                        return this.getProduct(order.lockType);
+                    }
                 }
             }
             return null;
@@ -90,9 +92,11 @@ export default {
         ,
 
         getCustomer(id) {
-            for (const order of this.orders) {
-                if (order.id === id) {
-                    return order.customer;
+            if (this.orders) {
+                for (const order of this.orders) {
+                    if (order.id === id) {
+                        return order.customer;
+                    }
                 }
             }
             return null;
