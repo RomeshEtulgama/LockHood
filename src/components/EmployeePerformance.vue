@@ -1,12 +1,13 @@
 <template>
     <v-container fluid>
-        <v-btn @click="generateOrderReport()">Generate Order Report</v-btn>
+        <v-btn @click="generatePerformanceReport()">Generate Performance Report</v-btn>
         <vue-html2pdf :show-layout="false" :float-layout="true" :enable-download="true" :preview-modal="true"
-            :paginate-elements-by-height="1400" filename="Order Report" :pdf-quality="2" :manual-pagination="false"
-            pdf-format="a4" pdf-orientation="landscape" pdf-content-width="1100px" ref="html2Pdf">
+            :paginate-elements-by-height="1400" filename="Performance Report" :pdf-quality="2"
+            :manual-pagination="false" pdf-format="a4" pdf-orientation="landscape" pdf-content-width="1100px"
+            ref="html2Pdf">
             <section slot="pdf-content">
                 <div style="margin: 20px;">
-                    <h1>Orders Report</h1>
+                    <h1>Performances Report</h1>
 
                     <table>
                         <thead>
@@ -24,33 +25,36 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="order in orders" v-bind:key="order.id">
-                                <td>{{ order.id }}</td>
-                                <td>{{ order.customer }}</td>
-                                <td>{{ getProduct(order.lockType) }}</td>
-                                <td>{{ order.quantity }}</td>
-                                <td>{{ order.deliveryDate }}</td>
-                                <td>{{ order.accepted ? "Accepted" : "Pending" }}</td>
+                            <tr v-for="performance in performances" v-bind:key="performance.id">
+                                <td>{{ performance.id }}</td>
+                                <td>{{ performance.customer }}</td>
+                                <td>{{ getProduct(performance.lockType) }}</td>
+                                <td>{{ performance.quantity }}</td>
+                                <td>{{ performance.deliveryDate }}</td>
+                                <td>{{ performance.accepted ? "Accepted" : "Pending" }}</td>
                                 <td>
-                                    <template v-if="order.assignedEmployees">
-                                        <span v-for="assignedEmployee in order.assignedEmployees"
+                                    <template v-if="performance.assignedEmployees">
+                                        <span v-for="assignedEmployee in performance.assignedEmployees"
                                             v-bind:key="assignedEmployee.uid">
                                             {{ getUser(assignedEmployee.uid) }} ({{ assignedEmployee.quantity }}) <br />
                                         </span>
                                     </template>
                                 </td>
                                 <td>{{
-                                    order.finishedQuantity ? (order.finishedQuantity / order.quantity >= 1 ? "Finished"
+                                    performance.finishedQuantity ? (performance.finishedQuantity / performance.quantity
+                                        >= 1 ? "Finished"
                                         :
-                                        order.finishedQuantity + ' / ' + order.quantity) : ''
+                                        performance.finishedQuantity + ' / ' + performance.quantity) : ''
                                 }}</td>
                                 <td>{{
-                                    order.quantity * getTimeRequirement(order.lockType) > 24 ? Math.floor(order.quantity
-                                        *
-                                        getTimeRequirement(order.lockType) / 24) + ' days' : Math.floor(order.quantity *
-                                            getTimeRequirement(order.lockType)) + ' hours'
+                                    performance.quantity * getTimeRequirement(performance.lockType) > 24 ?
+                                        Math.floor(performance.quantity
+                                            *
+                                            getTimeRequirement(performance.lockType) / 24) + ' days' :
+                                        Math.floor(performance.quantity *
+                                            getTimeRequirement(performance.lockType)) + ' hours'
                                 }}</td>
-                                <td>{{ order.deliveryDate }}</td>
+                                <td>{{ performance.deliveryDate }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -72,13 +76,13 @@ export default {
     },
 
     data: () => ({
-        orders: null,
+        performances: null,
         employees: null,
         products: null,
     }),
 
     methods: {
-        generateOrderReport() {
+        generatePerformanceReport() {
             this.$refs.html2Pdf.generatePdf()
         },
 
@@ -116,7 +120,7 @@ export default {
         },
     },
     async mounted() {
-        this.orders = await fb.getOrders()
+        this.performances = await fb.getPerformances()
         this.employees = await fb.getEmployees()
         this.products = await fb.getFactoryItems()
     }
@@ -125,13 +129,13 @@ export default {
 
 <style scoped>
 table {
-    border: 1px solid gray;
-    border-collapse: collapse;
+    bperformance: 1px solid gray;
+    bperformance-collapse: collapse;
 }
 
 td,
 th {
-    border: 1px solid black;
+    bperformance: 1px solid black;
     padding: 0.5em;
 }
 </style>

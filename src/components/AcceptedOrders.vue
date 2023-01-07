@@ -289,7 +289,11 @@ export default {
     computed: {
         finishedQuantity() {
             var sum = this.progress_info.assignedEmployees.reduce((total, employee) => total + (Number(employee.finishedQuantity) ? Number(employee.finishedQuantity) : 0), 0);
-            return sum + this.progress_info.finishedQuantity
+            var finishedQuantity = Number(Number(sum) ? Number(sum) : 0) + Number(Number(this.progress_info.finishedQuantity) ? Number(this.progress_info.finishedQuantity) : 0)
+            if (finishedQuantity)
+                return finishedQuantity
+            else
+                return 0
         },
 
         progressPercentage() {

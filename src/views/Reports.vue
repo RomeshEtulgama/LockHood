@@ -3,10 +3,12 @@
         <h2>Reports</h2>
         <InventoryReport />
         <OrderReport />
+        <EmployeePerformance />
     </v-container>
 </template>
 
 <script>
+import EmployeePerformance from '@/components/EmployeePerformance.vue';
 import InventoryReport from '../components/InventoryReport.vue'
 import OrderReport from '../components/OrderReport.vue'
 
@@ -16,6 +18,7 @@ export default {
     components: {
         InventoryReport,
         OrderReport,
+        EmployeePerformance
     },
 
     data: () => ({
