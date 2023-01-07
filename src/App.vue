@@ -106,6 +106,30 @@ export default {
   methods: {
     logout() {
       signOut(getAuth())
+    },
+
+    setItems() {
+      if (this.user.class == 'Admin') {
+        this.items = [
+          { title: "Dashboard", icon: "mdi-view-dashboard", route: "/" },
+          { title: "Inventory", icon: "mdi-view-list", route: "/inventory" },
+          { title: "Orders", icon: "mdi-book", route: "/orders" },
+          { title: "KanBan", icon: "mdi-card", route: "/kanban" },
+          { title: "Reports", icon: "mdi-file-document", route: "/reports" },
+        ]
+      } else if (this.user.class == 'HR') {
+        this.items = [
+          { title: "Dashboard", icon: "mdi-view-dashboard", route: "/" },
+          { title: "KanBan", icon: "mdi-card", route: "/kanban" },
+          { title: "Reports", icon: "mdi-file-document", route: "/reports" },
+        ]
+      } else if (this.user.class == 'Supervisor') {
+        this.items = [
+          { title: "KanBan", icon: "mdi-card", route: "/kanban" },
+        ]
+      } else {
+        this.items = []
+      }
     }
   },
 
@@ -128,6 +152,10 @@ export default {
 
   async beforeCreate() {
     this.user = await fb.getUser()
+    this.setItems()
   },
+
+  mounted() {
+  }
 };
 </script>
