@@ -140,7 +140,7 @@ export default {
 
         async save() {
             this.loading = true
-            await fb.addRawItem(this.item_info.itemName, Number(this.item_info.quantity))
+            await fb.addRawItem(this.item_info.itemName, Number(this.item_info.quantity), Number(this.item_info.alertQuantity))
             await this.refreshItems()
             this.close()
             this.loading = false

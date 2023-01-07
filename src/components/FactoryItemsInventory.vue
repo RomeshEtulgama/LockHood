@@ -35,7 +35,7 @@
                                     <v-col cols="12" sm="6" md="6" lg="6">
                                         <v-text-field v-model="product_info.timeRequirement" label="Hours per item"
                                             :rules="[() => !!product_info.timeRequirement || 'Product Name is required',]"
-                                            required suffix="hours"></v-text-field>
+                                            required suffix="hours" type="number"></v-text-field>
                                     </v-col>
                                 </v-row>
                                 <v-row v-for="(item, i) in product_info.required_raw_items" :key="i">

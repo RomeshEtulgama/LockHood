@@ -211,10 +211,11 @@ async function getNumberOfAssignedOrders(userId) {
 //functions/rawItems ---------------------------------------------------------------------------------------------------!
 
 /* adds an item to the "rawItems" collection in a database with the specified name and quantity. */
-async function addRawItem(itemName, quantity) {
+async function addRawItem(itemName, quantity, alertQuantity) {
     await this.addData(rawItemsCollection, {
         itemName: itemName,
-        quantity: quantity
+        quantity: Number(quantity),
+        alertQuantity: Number(alertQuantity)
     })
 }
 
@@ -248,7 +249,7 @@ async function updateRawItemQuantity(itemId, quantity) {
     const docRef = doc(rawItemsCollection, itemId)
 
     await updateDoc(docRef, {
-        quantity: quantity
+        quantity: Number(quantity)
     });
 }
 
@@ -256,7 +257,7 @@ async function updateRawItemAlertQuantity(itemId, alertQuantity) {
     const docRef = doc(rawItemsCollection, itemId)
 
     await updateDoc(docRef, {
-        alertQuantity: alertQuantity
+        alertQuantity: Number(alertQuantity)
     });
 }
 
@@ -273,6 +274,7 @@ async function updateRawItemName(itemId, itemName) {
 
 /* adds an item to the "factoryItems" collection in a database with the specified name and quantity. */
 async function addFactoryItem(item) {
+    item.timeRequirement = Number(item.timeRequirement)
     await this.addData(factoryItemsCollection, item)
 }
 
@@ -304,6 +306,10 @@ async function getFactoryItem(itemId) {
 
 async function updateFactoryItem(itemId, payload) {
     const docRef = doc(factoryItemsCollection, itemId)
+    payload.timeRequirement = Number(payload.timeRequirement)
+    payload.required_raw_items.forEach(item => {
+        item.quantity = Number(item.quantity)
+    })
     await updateDoc(docRef, payload)
 }
 
@@ -342,7 +348,7 @@ async function addOrder(order) {
     await this.addData(ordersCollection, {
         customer: order.customer,
         lockType: order.lockType,
-        quantity: order.quantity,
+        quantity: Number(order.quantity),
         deliveryDate: order.deliveryDate,
     })
 }
@@ -364,7 +370,7 @@ async function updateOrderQuantity(itemId, quantity) {
     const docRef = doc(ordersCollection, itemId)
 
     await updateDoc(docRef, {
-        quantity: quantity
+        quantity: Number(quantity)
     });
 }
 
