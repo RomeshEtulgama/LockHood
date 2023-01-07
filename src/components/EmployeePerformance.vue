@@ -3,64 +3,36 @@
         <v-btn @click="generatePerformanceReport()">Generate Performance Report</v-btn>
         <vue-html2pdf :show-layout="false" :float-layout="true" :enable-download="true" :preview-modal="true"
             :paginate-elements-by-height="1400" filename="Performance Report" :pdf-quality="2"
-            :manual-pagination="false" pdf-format="a4" pdf-orientation="landscape" pdf-content-width="1100px"
+            :manual-pagination="false" pdf-format="a4" pdf-orientation="portrait" pdf-content-width="1100px"
             ref="html2Pdf">
             <section slot="pdf-content">
                 <div style="margin: 20px;">
-                    <h1>Performances Report</h1>
+                    <h1>Employee Performances Report</h1>
 
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Customer</th>
-                                <th>Lock Type</th>
-                                <th>Quantity</th>
-                                <th>Delivery Date</th>
-                                <th>Accepted</th>
-                                <th>Assigned Employees</th>
-                                <th>Progress</th>
-                                <th>Time to complete</th>
-                                <th>Delivery Date</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Approved</th>
+                                <th>Assigned Orders</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="performance in performances" v-bind:key="performance.id">
-                                <td>{{ performance.id }}</td>
-                                <td>{{ performance.customer }}</td>
-                                <td>{{ getProduct(performance.lockType) }}</td>
-                                <td>{{ performance.quantity }}</td>
-                                <td>{{ performance.deliveryDate }}</td>
-                                <td>{{ performance.accepted ? "Accepted" : "Pending" }}</td>
-                                <td>
-                                    <template v-if="performance.assignedEmployees">
-                                        <span v-for="assignedEmployee in performance.assignedEmployees"
-                                            v-bind:key="assignedEmployee.uid">
-                                            {{ getUser(assignedEmployee.uid) }} ({{ assignedEmployee.quantity }}) <br />
-                                        </span>
-                                    </template>
+                            <tr v-for="employee in employees" v-bind:key="employee.uid">
+                                <td>{{ employee.displayName }}</td>
+                                <td>{{ employee.email }}</td>
+                                <td>{{ employee.approved }}</td>
+                                <td style="white-space:pre;">{{ processAssignedOrders(employee) }}
                                 </td>
-                                <td>{{
-                                    performance.finishedQuantity ? (performance.finishedQuantity / performance.quantity
-                                        >= 1 ? "Finished"
-                                        :
-                                        performance.finishedQuantity + ' / ' + performance.quantity) : ''
-                                }}</td>
-                                <td>{{
-                                    performance.quantity * getTimeRequirement(performance.lockType) > 24 ?
-                                        Math.floor(performance.quantity
-                                            *
-                                            getTimeRequirement(performance.lockType) / 24) + ' days' :
-                                        Math.floor(performance.quantity *
-                                            getTimeRequirement(performance.lockType)) + ' hours'
-                                }}</td>
-                                <td>{{ performance.deliveryDate }}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </section>
         </vue-html2pdf>
+
+
     </v-container>
 </template>
 
@@ -76,25 +48,14 @@ export default {
     },
 
     data: () => ({
-        performances: null,
         employees: null,
-        products: null,
+        orders: null,
+        products: null
     }),
 
     methods: {
         generatePerformanceReport() {
             this.$refs.html2Pdf.generatePdf()
-        },
-
-        getUser(uid) {
-            if (this.employees) {
-                for (const employee of this.employees) {
-                    if (employee.uid === uid) {
-                        return employee.displayName;
-                    }
-                }
-            }
-            return null;
         },
 
         getProduct(id) {
@@ -108,34 +69,54 @@ export default {
             return null;
         },
 
-        getTimeRequirement(id) {
-            if (this.products) {
-                for (const product of this.products) {
-                    if (product.id === id) {
-                        return product.timeRequirement;
-                    }
+        processAssignedOrders(employee) {
+            var orders = ""
+            for (const orderId in employee.assignedOrders) {
+                const order = employee.assignedOrders[orderId];
+                orders += this.getCustomer(orderId) + ' --- ' + this.getLockType(orderId) + ' × ' + order.quantity + '\n'
+            }
+            return orders.trim();
+        },
+
+        getLockType(id) {
+            for (const order of this.orders) {
+                if (order.id === id) {
+                    return this.getProduct(order.lockType);
                 }
             }
             return null;
-        },
+        }
+
+        ,
+
+        getCustomer(id) {
+            for (const order of this.orders) {
+                if (order.id === id) {
+                    return order.customer;
+                }
+            }
+            return null;
+        }
+
+
     },
     async mounted() {
-        this.performances = await fb.getPerformances()
         this.employees = await fb.getEmployees()
         this.products = await fb.getFactoryItems()
+        this.orders = await fb.getOrders()
     }
 }
 </script>
 
 <style scoped>
 table {
-    bperformance: 1px solid gray;
-    bperformance-collapse: collapse;
+    border: 1px solid gray;
+    border-collapse: collapse;
 }
 
 td,
 th {
-    bperformance: 1px solid black;
+    border: 1px solid black;
     padding: 0.5em;
 }
 </style>
